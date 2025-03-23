@@ -23,11 +23,7 @@
 
 
 Imports System.Configuration
-Imports System.Data.SqlTypes
-Imports System.Windows.Forms.VisualStyles.VisualStyleElement
 Imports Microsoft.Office.Interop.Excel
-
-'Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
 
 
@@ -156,7 +152,7 @@ Public Class UserForm1
 
         'Copy charts of different scenario to new sheet
 
-        Call arrChartsScen()
+        Call ArrChartsScen()
 
     End Sub
 
@@ -198,7 +194,7 @@ Public Class UserForm1
         'Iterate to search for chart numbers in column C, and then put "*" (if not "NA") in column B
         For i = 1 To 100
             c = excelWorkSheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
-            If Not c Is Nothing Then
+            If Not c Is Nothing Then  'CHANGE
                 If c.Offset(0, -1).Value <> "NA" Then
                     c.Offset(0, -1).Value = "*"
                 End If
@@ -215,7 +211,7 @@ Public Class UserForm1
         'Iterate to search for chart numbers in column C, and then put "*" (if not "NA") in column A
         For i = 1 To 1000
             c = excelWorkSheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
-            If Not c Is Nothing Then
+            If Not c Is Nothing Then 'CHANGE
                 If c.Offset(0, -2).Value <> "NA" Then
                     c.Offset(0, -2).Value = "*"
                 End If
@@ -385,8 +381,8 @@ Public Class UserForm1
             regionStr = rst.Fields(0).Value
             If ((StrComp("REGION0", regionStr) <> 0) And (StrComp("_GLOBAL", regionStr) <> 0)) Then
                 i = i + 1
-                ReDim Preserve regionArray(1 To i)
-                regionArray(i) = regionStr
+                ReDim Preserve regionArray(0 To i - 1)  'CHANGE previous: 1 TO i
+                regionArray(i - 1) = regionStr     'CHANGE: previous i 
             End If
             rst.MoveNext()
         Loop
@@ -448,7 +444,7 @@ Public Class UserForm1
 
     End Sub
 
-    Sub importAllButton_Click() Handles importAllButton.Click
+    Sub ImportAllButton_Click() Handles importAllButton.Click
 
         ' Batch import of several cases
         ' The names of the cases are in a list with text "Batch" in the header in "Sheet1"
@@ -471,7 +467,7 @@ Public Class UserForm1
                 If Not longName = "" Then
                     longName = "(" & longName & ")"
                 End If
-                Call importFromMDB(answerFileName:=FilenameBox.Text,
+                Call ImportFromMDB(answerFileName:=FilenameBox.Text,
                         caseName:=r.Cells(1, 1).Value,
                         scenarioName:=r.Cells(1, 3).Value,
                         caseNameLong:=longName)
@@ -488,13 +484,13 @@ Public Class UserForm1
 
     End Sub
 
-    Sub importButton_Click() Handles importButton.Click
+    Sub ImportButton_Click() Handles importButton.Click
 
         If Not selectRegions.Checked Then
             Call OnStart()
         End If
 
-        Call importFromMDB(answerFileName:=FilenameBox.Text,
+        Call ImportFromMDB(answerFileName:=FilenameBox.Text,
                         caseName:=CaseNameComboBox.Text,
                         scenarioName:=ScenarioTextBox.Text)
 
@@ -508,7 +504,7 @@ Public Class UserForm1
 
 
 
-    Sub importFromMDB(answerFileName As String,
+    Sub ImportFromMDB(answerFileName As String,
                     caseName As String,
                     scenarioName As String,
                     Optional caseNameLong As String = "")
@@ -605,9 +601,9 @@ Public Class UserForm1
                 lTitle = CStr(c.Offset(0, 1).Value)
                 lUnit = CStr(c.Offset(1, 1).Value)
                 lComment = CStr(c.Offset(2, 1).Value)
-                numFormat = IIf(IsEmpty(c.Offset(4, 1).Value), "0.0", CStr(c.Offset(4, 1).Value))
-                If Not IsEmpty(c.Offset(5, 1).Value) And
-         Not IsEmpty(c.Offset(6, 1).Value) Then
+                numFormat = IIf(String.IsNullOrEmpty(c.Offset(4, 1).Value), "0.0", CStr(c.Offset(4, 1).Value))
+                If Not String.IsNullOrEmpty(c.Offset(5, 1).Value) And
+         Not String.IsNullOrEmpty(c.Offset(6, 1).Value) Then
                     oRange = excelWorkSheets("Sheet1").Range(c.Offset(5, 1), c.Offset(5, 1).End(XlDirection.xlDown))
                 Else
                     oRange = c.Offset(5, 1)

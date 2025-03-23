@@ -12,50 +12,54 @@ Public Module Module3
         Dim tags As Range, c As Range
         Dim rg1 As Range    ' lookup range on 1st sheet
         Dim rg2 As Range    ' lookup range on 2nd sheet
-        Dim sh As Array    ' Array of Sheet names
+        Dim sh(3) As String ' Array of Sheet names
         Dim s As String     ' value to lookup
         Dim ret1 As Object  ' return of Vlookup on 1st sheet
         Dim ret2 As Object  ' return of Vlookup on 2nd sheet
         Dim i As Double ' divide by i for average
         Dim n As Integer 'index of sheet
 
-        sh = Array("JAZZ", "ROCK", "SYMPH")
+        sh = {"JAZZ", "ROCK", "SYMPH"}
 
-        For n = 0 To 2
+        With UserForm1.excelWorkBook
 
-            tags = Sheets(sh(n Mod 3)).Range("O1:O10000")
-            rg1 = Sheets(sh((n + 1) Mod 3)).Range("O1:R10000")
-            rg2 = Sheets(sh((n + 2) Mod 3)).Range("O1:R10000")
+            For n = 0 To 2
 
-            For Each c In tags
-                If Not IsEmpty(c.Value) Then
-                    s = c.Value
-                    i = 1
-                    ret1 = excelApp.VLookup(s, rg1, 4, False)
-                    If IsError(ret1) Then
-                        ret1 = 0
-                    Else : i = i + 1
+                tags = .Sheets(sh(n Mod 3)).Range("O1:O10000")
+                rg1 = .Sheets(sh((n + 1) Mod 3)).Range("O1:R10000")
+                rg2 = .Sheets(sh((n + 2) Mod 3)).Range("O1:R10000")
+
+                For Each c In tags
+                    If Not IsNothing(c.Value) Then  'VBA: IsEmpty
+                        s = c.Value
+                        i = 1
+                        ret1 = UserForm1.excelApp.VLookup(s, rg1, 4, False)
+                        If IsError(ret1) Then
+                            ret1 = 0
+                        Else : i = i + 1
+                        End If
+                        ret2 = UserForm1.excelApp.VLookup(s, rg2, 4, False)
+                        If IsError(ret2) Then
+                            ret2 = 0
+                        Else : i = i + 1
+                        End If
+                        c.Offset(0, 1).Value = (ret1 + ret2 + c.Offset(0, 3).Value) / i
                     End If
-                    ret2 = Application.VLookup(s, rg2, 4, False)
-                    If IsError(ret2) Then
-                        ret2 = 0
-                    Else : i = i + 1
+                Next c
+            Next n
+
+            For n = 0 To 2
+                rg1 = .Sheets(sh(n)).Range("P1:P10000")
+                For Each c In rg1
+                    If Not IsNothing(c.Value) Then 'VBA: IsEmpty
+                        c.Offset(0, 2).Value = c.Value
+                        c.Value = "'"
                     End If
-                    c.Offset(0, 1).Value = (ret1 + ret2 + c.Offset(0, 3).Value) / i
-                End If
-            Next c
-        Next n
+                Next c
+            Next n
 
-        For n = 0 To 2
-            rg1 = Sheets(sh(n)).Range("P1:P10000")
-            For Each c In rg1
-                If Not IsEmpty(c.Value) Then
-                    c.Offset(0, 2).Value = c.Value
-                    c.Value = "'"
-                End If
-            Next c
-        Next n
 
+        End With
     End Sub
 
 
@@ -75,37 +79,41 @@ Public Module Module3
         '
         'Dim resultCell As Range
 
-        ActiveCell.Resize(10, 30).Select
-        Selection.Find(What:="EU31", After:=ActiveCell, LookIn:=XlFindLookIn.xlValues,
-        LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows, SearchDirection:=XlSearchDirection.xlNext,
-        MatchCase:=True, SearchFormat:=False).Select
-        ActiveCell.Offset(1).EntireRow.Insert(XlDirection.xlDown)
-        ActiveCell.Offset.EntireRow.Copy
-        ActiveCell.Offset(1).EntireRow.PasteSpecial(xlPasteValues)
-        Application.CutCopyMode = False
-        ActiveCell.Offset(0, 3).Value = "GCC"
-        'ActiveCell.Offset(0, 6).Value = ""
-        'ActiveCell.Offset(0, 7).Value = ""
-        'ActiveCell.Offset(0, 8).Value = ""
+        With UserForm1.excelApp
 
-        ActiveCell.Resize(6, 30).Select
-        Selection.Find(What:="MENA", After:=ActiveCell, LookIn:=XlFindLookIn.xlValues,
-        LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows, SearchDirection:=XlSearchDirection.xlNext,
-        MatchCase:=True, SearchFormat:=False).Select
-        ActiveCell.Offset(1).EntireRow.Insert(XlDirection.xlDown)
-        ActiveCell.Offset(1).EntireRow.Insert(XlDirection.xlDown)
-        ActiveCell.Offset.EntireRow.Copy
-        ActiveCell.Offset(1).EntireRow.PasteSpecial(xlPasteValues)
-        ActiveCell.Offset(1).EntireRow.PasteSpecial(xlPasteValues)
-        ActiveCell.Offset(-1, 3).Value = "MIDEAST"
-        ActiveCell.Offset(0, 3).Value = "NAFRICA"
-        'ActiveCell.Offset(-1, 6).Value = ""
-        'ActiveCell.Offset(0, 6).Value = ""
-        'ActiveCell.Offset(-1, 7).Value = ""
-        'ActiveCell.Offset(0, 7).Value = ""
-        'ActiveCell.Offset(-1, 8).Value = ""
-        'ActiveCell.Offset(0, 8).Value = ""
-        excelApp.CutCopyMode = False
+            .ActiveCell.Resize(10, 30).Select()
+            .Selection.Find(What:="EU31", After:= .ActiveCell, LookIn:=XlFindLookIn.xlValues,
+            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows, SearchDirection:=XlSearchDirection.xlNext,
+            MatchCase:=True, SearchFormat:=False).Select
+            .ActiveCell.Offset(1).EntireRow.Insert(XlDirection.xlDown)
+            .ActiveCell.Offset.EntireRow.Copy()
+            .ActiveCell.Offset(1).EntireRow.PasteSpecial(XlPasteType.xlPasteValues)
+            .CutCopyMode = False
+            .ActiveCell.Offset(0, 3).Value = "GCC"
+            'ActiveCell.Offset(0, 6).Value = ""
+            'ActiveCell.Offset(0, 7).Value = ""
+            'ActiveCell.Offset(0, 8).Value = ""
+
+            .Resize(6, 30).Select
+            .Selection.Find(What:="MENA", After:= .ActiveCell, LookIn:=XlFindLookIn.xlValues,
+            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows, SearchDirection:=XlSearchDirection.xlNext,
+            MatchCase:=True, SearchFormat:=False).Select
+            .ActiveCell.Offset(1).EntireRow.Insert(XlDirection.xlDown)
+            .ActiveCell.Offset(1).EntireRow.Insert(XlDirection.xlDown)
+            .ActiveCell.Offset.EntireRow.Copy()
+            .ActiveCell.Offset(1).EntireRow.PasteSpecial(XlPasteType.xlPasteValues)
+            .ActiveCell.Offset(1).EntireRow.PasteSpecial(XlPasteType.xlPasteValues)
+            .ActiveCell.Offset(-1, 3).Value = "MIDEAST"
+            .ActiveCell.Offset(0, 3).Value = "NAFRICA"
+            'ActiveCell.Offset(-1, 6).Value = ""
+            'ActiveCell.Offset(0, 6).Value = ""
+            'ActiveCell.Offset(-1, 7).Value = ""
+            'ActiveCell.Offset(0, 7).Value = ""
+            'ActiveCell.Offset(-1, 8).Value = ""
+            'ActiveCell.Offset(0, 8).Value = ""
+            .CutCopyMode = False
+
+        End With
     End Sub
 
 

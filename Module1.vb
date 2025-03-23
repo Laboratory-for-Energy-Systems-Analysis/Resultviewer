@@ -1,11 +1,10 @@
-﻿Option Explicit On
-
-Imports Microsoft.Office.Interop
+﻿Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 Imports System.Xml
 Imports Microsoft.VisualBasic
 Imports Windows.Win32.System
 Imports System.Globalization
+Imports System.Drawing.Imaging
 
 Module Module1
 
@@ -1011,23 +1010,23 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
     '29. Biomass Production
     Function sqlQuery29(caseName As String, region As String) As String
 
-'sqlQuery29 = _
-"SELECT * FROM " & _
-"(SELECT Technology, " & template("0.001*SUM(T2000) AS 2000", sop, timestep, eop) & _
-" FROM (SELECT *,                          " & _
-"   IIF(Item1 = 'BWTD', 'Wood',            " & _
-"   IIF(Item1 = 'OCTD', 'Oil Crops',       " & _
-"   IIF(Item1 = 'CGTD', 'Corn Grains',     " & _
-"   IIF(Item1 = 'SUTD', 'Sugar Plants',    " & _
-"   IIF(Item1 = 'STTD', 'Stover',          " & _
-"   IIF(Item1 = 'DWTD', 'Waste', 'delete')))))) AS Technology " & _
-" FROM tblTRESULTS                         " & _
-"  WHERE CaseName = '" & caseName & "'     " & _
-"    AND Parameter IN ('OUTOTH.PRC.A??')   " & _
-"    AND Region IN (" & region & ")        " & _
-" ) GROUP BY Technology) WHERE Technology <> 'delete' "
+        'sqlQuery29 = _
+        '"SELECT * FROM " & _
+        '"(SELECT Technology, " & template("0.001*SUM(T2000) AS 2000", sop, timestep, eop) & _
+        '" FROM (SELECT *,                          " & _
+        '"   IIF(Item1 = 'BWTD', 'Wood',            " & _
+        '"   IIF(Item1 = 'OCTD', 'Oil Crops',       " & _
+        '"   IIF(Item1 = 'CGTD', 'Corn Grains',     " & _
+        '"   IIF(Item1 = 'SUTD', 'Sugar Plants',    " & _
+        '"   IIF(Item1 = 'STTD', 'Stover',          " & _
+        '"   IIF(Item1 = 'DWTD', 'Waste', 'delete')))))) AS Technology " & _
+        '" FROM tblTRESULTS                         " & _
+        '"  WHERE CaseName = '" & caseName & "'     " & _
+        '"    AND Parameter IN ('OUTOTH.PRC.A??')   " & _
+        '"    AND Region IN (" & region & ")        " & _
+        '" ) GROUP BY Technology) WHERE Technology <> 'delete' "
 
-sqlQuery29 =
+        sqlQuery29 =
 " SELECT Region, " & template("0.001*sum(T2000) AS 2000", sop, timestep, eop) &
 " FROM tblTRESULTS " &
 " WHERE CaseName = '" & caseName & "'" &
@@ -1443,7 +1442,7 @@ template("T2000 * " & mileage & " AS T2000", sop, timestep, eop) & ", " &
         Dim xStart As Integer
         Dim i As Integer
 
-        c = Worksheets("Sheet1").Range("C1:C20000").Find(num, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
+        c = UserForm1.excelWorkBook.Worksheets("Sheet1").Range("C1:C20000").Find(num, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
         str = " SELECT TOP 1 '" & region & "' AS Region, "
         xOffset = 0
         xStart = 5 'offset of first column
@@ -2562,7 +2561,7 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
 
     End Function
 
-    Function template(str As String, b As Integer, timestep As Integer, e As Integer, Optional f As Variant) As String
+    Function template(str As String, b As Integer, timestep As Integer, e As Integer, Optional f As Object = "") As String
 
         Dim s, str2 As String
         Dim y As Integer
@@ -2573,7 +2572,7 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
         y = b
         i = 1
         imax = 0
-        If IsMissing(f) Then
+        If (CType(f, String) = "") Then
             factor = "1.0"
         ElseIf IsArray(f) Then
             i = LBound(f)
@@ -2589,8 +2588,8 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
                 factor = CStr(f(i))
                 i = i + 1
             End If
-            str2 = WorksheetFunction.Substitute(str, "2000", CStr(y))
-            s = s & WorksheetFunction.Substitute(str2, "$", factor)
+            str2 = UserForm1.excelApp.WorksheetFunction.Substitute(str, "2000", CStr(y))
+            s = s & UserForm1.excelApp.WorksheetFunction.Substitute(str2, "$", factor)
             y = y + timestep
         Loop
         template = s & " "
@@ -2600,24 +2599,41 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
     Sub Show_Panel()
 
         If UserForm1.Visible = False Then
-            UserForm1.Show
+            UserForm1.Show()
         End If
 
     End Sub
 
 
-    Public Function MyTranspose(vArr As Object) As Object
-        Dim lRow As Long
-        Dim lCol As Long
-        Dim vNewArray() As Object
-        ReDim vNewArray(LBound(vArr, 2) To UBound(vArr, 2), LBound(vArr, 1) To UBound(vArr, 1))
-        For lRow = LBound(vArr, 1) To UBound(vArr, 1)
-            For lCol = LBound(vArr, 2) To UBound(vArr, 2)
-                vNewArray(lCol, lRow) = vArr(lRow, lCol)
+    'https://gist.github.com/mikelheim/9087511
+    'takes 2D array of any type and returns a transposed 2D array of same type. Vb.Net Function
+
+    Public Function MyTranspose(Of Array)(ByVal inArray As Array(,)) As Array(,)
+        Dim x = CInt(inArray.GetLength(1))
+        Dim y = CInt(inArray.GetLength(0))
+        Dim outArray(x - 1, y - 1) As Array
+
+        For i = 0 To x - 1
+            For j = 0 To y - 1
+                outArray(i, j) = inArray(j, i)
             Next
         Next
-        MyTranspose = vNewArray
+        MyTranspose = outArray
     End Function
+
+    'Public Function MyTranspose(ByVal vArr As Object) As Object
+    ' Dim lRow As Long
+    'Dim lCol As Long
+    'Dim vNewArray() As Object
+    '
+    'ReDim vNewArray(LBound(vArr, 2) To UBound(vArr, 2), LBound(vArr, 1) To UBound(vArr, 1))
+    'For lRow = LBound(vArr, 1) To UBound(vArr, 1)
+    'For lCol = LBound(vArr, 2) To UBound(vArr, 2)
+    '           vNewArray(lCol, lRow) = vArr(lRow, lCol)
+    'Next
+    'Next
+    '   MyTranspose = vNewArray
+    'End Function
 
     Public Sub importData(answerFileName As String, lQuery As String, lTitle As String,
                lUnit As String, lChart As String, lRange As Range, lType As Excel.XlChartType,
@@ -2626,7 +2642,7 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
 
         Dim nextFreeRow As Excel.Range
         Dim resizedRange As Excel.Range
-        Dim myValues As Variant
+        Dim myValues As Object
         'Dim myValues2  As Variant
         Dim nRows As Integer
         Dim nCols As Integer
@@ -2638,7 +2654,7 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
         ' Needs:
         ' Excel-> VBA Editor -> Tools -> References "Microsoft Active Data Objects 2.1 Library" (perhaps also: "...multidimensional 2.8 Library")
 
-        nextFreeRow = ActiveSheet.Cells(65536, 17).End(XlDirection.xlUp)
+        nextFreeRow = UserForm1.excelApp.ActiveSheet.Cells(65536, 17).End(XlDirection.xlUp)
         'MsgBox ActiveSheet.Name
         'MsgBox nextFreeRow.Row
         'MsgBox nextFreeRow.Column
@@ -2667,8 +2683,8 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
             With UserForm1.rs
                 .Source = lQuery
                 .ActiveConnection = UserForm1.con
-                .CursorType = adOpenForwardOnly
-                .Open
+                .CursorType = ADODB.CursorTypeEnum.adOpenForwardOnly
+                .Open()
                 myValues = .GetRows
                 nRows = UBound(myValues, 1) + 1
                 nCols = UBound(myValues, 2) + 1
@@ -2707,7 +2723,7 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
             ' Dim dbcol As Integer
             ' dbcol = 0
             ' nextFreeRow.Value = rs(dbcol).Value
-            UserForm1.rs.Close
+            UserForm1.rs.Close()
             'Set rs = Nothing
             'con.Close
             'Set con = Nothing
@@ -2715,15 +2731,15 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
         Else
 
             Dim oQryTable As Object
-            oQryTable = ActiveSheet.QueryTables.Add(
+            oQryTable = UserForm1.excelApp.ActiveSheet.QueryTables.Add(
    "OLEDB;Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & answerFileName & ";",
    nextFreeRow, lQuery)
             '"Select Region, Item1, Item2, Item3, CaseName, Parameter, T2000 from tblTRESULTS")
             'make room for new rows
-            oQryTable.RefreshStyle = xlInsertEntireRows
-            oQryTable.Refresh False
+            oQryTable.RefreshStyle = XlCellInsertionMode.xlInsertEntireRows
+            oQryTable.Refresh(False)
 
-   resizedRange = oQryTable.ResultRange
+            resizedRange = oQryTable.ResultRange
 
             'MsgBox "Delete Query Table"
             oQryTable.Delete
@@ -2764,21 +2780,21 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
         Dim chtChart As Chart
         Dim lSheet As String
 
-        lSheet = ActiveSheet.Name
-        chtChart = ActiveSheet.Shapes.addChart(10, 10, dW, dH).Chart
+        lSheet = UserForm1.excelApp.ActiveSheet.Name
+        chtChart = UserForm1.excelApp.ActiveSheet.Shapes.addChart(10, 10, dW, dH).Chart
         'Set chtChart = chtChart.Location(WHERE:=xlLocationAsObject, Name:=lSheet)
         With chtChart
-            .DisplayBlanksAs = xlZero
+            .DisplayBlanksAs = XlDisplayBlanksAs.xlZero
             .ChartType = lChartType
-            .SetSourceData(Source:=lRange, PlotBy:=xlRows)
+            .SetSourceData(Source:=lRange, PlotBy:=XlRowCol.xlRows)
             .HasTitle = True
             'please comment the next line out if you are using Excel 2003
-            .SetElement(msoElementChartTitleAboveChart)
+            '.SetElement(2)   ' msoElementChartTitleAboveChart CHANGE
             .HasTitle = True
             .ChartTitle.Text = lTitle
             .ChartTitle.Font.Bold = True
-            .PlotArea.Interior.ColorIndex = xlNone
-            .PlotArea.Border.LineStyle = xlNone
+            .PlotArea.Interior.ColorIndex = XlColorIndex.xlColorIndexNone
+            .PlotArea.Border.LineStyle = XlLineStyle.xlLineStyleNone
             .ChartGroups(1).GapWidth = 20
             .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).HasTitle = True
             .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).AxisTitle.Characters.Text = lUnit
@@ -2792,13 +2808,13 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
             .ChartTitle.Font.Size = 12
             .ChartArea.AutoScaleFont = False
             .Axes(XlAxisType.xlValue).MajorGridlines.Border.ColorIndex = 48
-            .Axes(XlAxisType.xlValue).MajorGridlines.Border.Weight = xlHairline
-            .Axes(XlAxisType.xlValue).MajorGridlines.Border.LineStyle = xlDot
+            .Axes(XlAxisType.xlValue).MajorGridlines.Border.Weight = XlBorderWeight.xlHairline
+            .Axes(XlAxisType.xlValue).MajorGridlines.Border.LineStyle = XlLineStyle.xlDot
             If lComment <> vbNullString Then
                 .Axes(XlAxisType.xlCategory).HasTitle = True
                 .Axes(XlAxisType.xlCategory).AxisTitle.Text = lComment
                 .Axes(XlAxisType.xlCategory).AxisTitle.Font.Size = 7
-                .Axes(XlAxisType.xlCategory).AxisTitle.HorizontalAlignment = xlLeft
+                .Axes(XlAxisType.xlCategory).AxisTitle.HorizontalAlignment = XlHAlign.xlHAlignLeft  'CHANGE!!!
             End If
             'The Parent property is used to set properties of
             'the ChartObject, size etc.
@@ -2844,16 +2860,20 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
         Dim dWidth As Integer
         'Dim nColumns As Long
 
-        dHeight = nRows * ActiveSheet.Rows(1).RowHeight ' height of all charts
-        dWidth = nCols * ActiveSheet.Columns("A").Width ' width of all charts
-        dTop = 0      ' top of first row of charts
-        dLeft = shift * dWidth ' left of first column of charts
-        '    nColumns = 2   ' number of columns of charts
-        nCharts = ActiveSheet.ChartObjects.Count
+        With UserForm1.excelApp
+
+            dHeight = nRows * .ActiveSheet.Rows(1).RowHeight ' height of all charts
+            dWidth = nCols * .ActiveSheet.Columns("A").Width ' width of all charts
+            dTop = 0      ' top of first row of charts
+            dLeft = shift * dWidth ' left of first column of charts
+            '    nColumns = 2   ' number of columns of charts
+            nCharts = .ActiveSheet.ChartObjects.Count
+
+        End With
 
         If reverse Then
             For iChart = 1 To nCharts
-                With ActiveSheet.ChartObjects(iChart)
+                With UserForm1.excelApp.ActiveSheet.ChartObjects(iChart)
                     .Height = dHeight
                     .Width = dWidth
                     .Top = dTop + Int(((nCharts - iChart + 1) - 1) / nColumns) * dHeight
@@ -2862,7 +2882,7 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
             Next
         Else
             For iChart = 1 To nCharts
-                With ActiveSheet.ChartObjects(iChart)
+                With UserForm1.excelApp.ActiveSheet.ChartObjects(iChart)
                     .Height = dHeight
                     .Width = dWidth
                     .Top = dTop + Int((iChart - 1) / nColumns) * dHeight
@@ -2878,21 +2898,26 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
         Dim ws As Worksheet, co As ChartObject, i As Integer
         Dim ch As Chart
 
-        For Each ws In ActiveWorkbook.Worksheets
-            ' Go through each worksheet in the workbook
-            For Each co In ws.ChartObjects
-                'In each chart turn the Auto Scale font feature off
+        With UserForm1.excelApp
+
+            For Each ws In .ActiveWorkbook.Worksheets
+                ' Go through each worksheet in the workbook
+                For Each co In ws.ChartObjects
+                    'In each chart turn the Auto Scale font feature off
+                    i = i + 1
+                    co.Chart.ChartArea.AutoScaleFont = False
+                Next co
+            Next ws
+            For Each ch In .ActiveWorkbook.Charts
+                'Go through each chart in the workbook
+                ch.ChartArea.AutoScaleFont = False
                 i = i + 1
-                co.Chart.ChartArea.AutoScaleFont = False
-            Next co
-        Next ws
-        For Each ch In ActiveWorkbook.Charts
-            'Go through each chart in the workbook
-            ch.ChartArea.AutoScaleFont = False
-            i = i + 1
-        Next
-        'MsgBox i & " charts have been altered"
-        'Application.DisplayAlerts = True
+            Next
+            'MsgBox i & " charts have been altered"
+            'Application.DisplayAlerts = True
+
+        End With
+
     End Sub
 
     Public Sub permutate(r As Range, orderRange As Range)
@@ -2902,13 +2927,17 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
         'XL97: Run-Time Error Using Macro to Add Custom List
         ' -> workaround with a temp array
 
-        If orderRange.Rows.Count > 2 Then
-            TempArray = orderRange
-            Application.AddCustomList(ListArray:=TempArray)
-            r.Sort(Key1:=r.Cells(2, 1), Order1:=xlDescending, Header:=xlYes,
-      OrderCustom:=Application.CustomListCount + 1)
-            Application.DeleteCustomList Application.CustomListCount
-  End If
+        With UserForm1.excelApp
+
+            If orderRange.Rows.Count > 2 Then
+                TempArray = orderRange
+                .AddCustomList(ListArray:=TempArray)
+                r.Sort(Key1:=r.Cells(2, 1), Order1:=XlSortOrder.xlDescending, Header:=XlYesNoGuess.xlYes,
+          OrderCustom:= .CustomListCount + 1)
+                .DeleteCustomList(.CustomListCount)
+            End If
+
+        End With
 
     End Sub
 
@@ -2947,7 +2976,8 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
 
     Public Sub reColor(ref As Range, cht As Chart)
 
-        Dim ser As Series
+        'Dim ser As Series
+        Dim ser As Object     'CHANGE: Use late binding, because mso is not defined in early binding
         Dim refRow As Range
         Dim val2
         'Dim colArray
@@ -2958,19 +2988,19 @@ IIf(sop < 2020, "  IIF(ISNULL(t2.T2010),0,t2.T2010)", " 0") & " AS y1,  " &
                     If (StrComp(CStr(refRow.Cells(1, 1)), .Name) = 0) Then
                         val2 = refRow.Cells(1, 3).Value
                         If cht.ChartType = XlChartType.xlColumnStacked Then
-                            If UserForm1.RGBCheckBox.Checked And Not IsEmpty(val2) Then
+                            If UserForm1.RGBCheckBox.Checked And Not IsNothing(val2) Then  ' CHANGE, previous IsEmpty
                                 'colArray = getRGB(CStr(val2))
                                 'ser.Interior.Color = RGB(colArray(1), colArray(2), colArray(3))
                                 .Interior.ColorIndex = CInt(val2)
                                 If refRow.Cells(1, 4).Value = "s" Then
-                                    .Fill.Patterned(msoPatternDarkUpwardDiagonal)
+                                    .Fill.Patterned(16)    'msoPatternDarkUpwardDiagonal CHANGE
                                 End If
                             Else
                                 .Interior.ColorIndex = CInt(refRow.Cells(1, 2))
                             End If
                         End If
                         If cht.ChartType = XlChartType.xlLineMarkers Then
-                            If UserForm1.RGBCheckBox.Checked And Not IsEmpty(val2) Then
+                            If UserForm1.RGBCheckBox.Checked And Not IsNothing(val2) Then ' CHANGE, previous IsEmpty
                                 'colArray = getRGB(CStr(val2))
                                 'ser.Border.Color = RGB(colArray(1), colArray(2), colArray(3))
                                 'ser.MarkerBackgroundColor = RGB(colArray(1), colArray(2), colArray(3))

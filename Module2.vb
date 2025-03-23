@@ -6,19 +6,19 @@ Imports Windows.Win32.System
 Public Module Module2
 
     'Prepare active chart for export
-    Sub prepareChart()
+    Sub PrepareChart()
 
         'Dim ws As Worksheet
         'Dim co As ChartObject
 
-        If ActiveChart Is Nothing Then
+        If UserForm1.excelWorkBook.ActiveChart Is Nothing Then
             MsgBox("Please click (activate)  first a chart.")
             Exit Sub
         End If
 
-        With ActiveChart
+        With UserForm1.excelWorkBook.ActiveChart
             .ChartArea.Border.LineStyle = XlLineStyle.xlLineStyleNone
-            .ChartArea.Interior.ColorIndex = xlColorIndexNone
+            .ChartArea.Interior.ColorIndex = XlColorIndex.xlColorIndexNone
             '.Axes(xlValue, xlPrimary).TickLabels.Font.Size = _
             '.Axes(xlValue, xlPrimary).TickLabels.Font.Size + 1
             '.Axes(xlCategory, xlPrimary).TickLabels.Font.Size = _
@@ -38,7 +38,7 @@ Public Module Module2
         Dim ws As Worksheet
         Dim co As ChartObject
 
-        ws = ActiveWorkbook.ActiveSheet
+        ws = UserForm1.excelApp.ActiveWorkbook.ActiveSheet
         For Each co In ws.ChartObjects
             With co.Chart
                 .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).TickLabels.Font.Size =
@@ -60,7 +60,7 @@ Public Module Module2
         Dim ws As Worksheet
         Dim co As ChartObject
 
-        ws = ActiveWorkbook.ActiveSheet
+        ws = UserForm1.excelApp.ActiveWorkbook.ActiveSheet
         For Each co In ws.ChartObjects
             With co.Chart
                 .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).TickLabels.Font.Size =
@@ -82,7 +82,7 @@ Public Module Module2
         Dim ws As Worksheet
         Dim co As ChartObject
 
-        ws = ActiveWorkbook.ActiveSheet
+        ws = UserForm1.excelApp.ActiveWorkbook.ActiveSheet
         For Each co In ws.ChartObjects
             With co.Chart
                 .ChartTitle.Font.Size = co.Chart.ChartTitle.Font.Size + 1
@@ -106,7 +106,7 @@ Public Module Module2
         Dim ws As Worksheet
         Dim co As ChartObject
 
-        ws = ActiveWorkbook.ActiveSheet
+        ws = UserForm1.excelApp.ActiveWorkbook.ActiveSheet
         For Each co In ws.ChartObjects
             With co.Chart
                 .ChartTitle.Font.Size = co.Chart.ChartTitle.Font.Size - 1
@@ -139,7 +139,7 @@ Public Module Module2
         Dim ax As Axis
 
         'For Each ws In ActiveWorkbook.Worksheets
-        ws = ActiveWorkbook.ActiveSheet
+        ws = UserForm1.excelApp.ActiveWorkbook.ActiveSheet
         ' Go through each worksheet in the workbook
         For Each co In ws.ChartObjects
             With co.Chart
@@ -232,130 +232,13 @@ Public Module Module2
 
     Sub DeleteAllCharts()
 
-        ActiveSheet.ChartObjects.Delete
+        UserForm1.excelWorkBook.ActiveSheet.ChartObjects.Delete
 
     End Sub
 
-    ' This procedure creates a new temporary toolbar.
-    ' Create a new floating toolbar and make it visible.
-    Sub AddNewToolBar()
-
-        Dim ComBar As CommandBar, ComBarContrl As CommandBarControl
-        On Error GoTo ErrorHandler
-        On Error Resume Next
-
-        'Delete the toolbar if it already exists
-        CommandBars("My Toolbar").Delete
-        ComBar = CommandBars.Add(Name:="My Toolbar", Position:=
-    msoBarTop, Temporary:=True)
-        ComBar.Visible = True
-
-        ' Button: Panel
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "Panel"
-            .Style = msoButtonCaption
-            .TooltipText = "Control Panel for Import from Answer"
-            .OnAction = "Show_Panel"
-        End With
-
-        ' Button: Print
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            '.FaceId = 1000 chooses an icon
-            .Caption = "Pdf setup"
-            .Style = msoButtonCaption
-            .TooltipText = "Charts print setup for current page"
-            .OnAction = "PrintSetup"
-        End With
-
-        ' Button: Scroll home
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "Up to A1"
-            .Style = msoButtonCaption
-            .TooltipText = "Scrolls all sheets to A1"
-            .OnAction = "homeScroll"
-        End With
-
-        ' Button: Scroll down
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "Down Pg"
-            .Style = msoButtonCaption
-            .TooltipText = "Scrolls all sheets down"
-            .OnAction = "scrollDown"
-        End With
-
-        ' Button: Increase title and legend
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "+Titles"
-            .Style = msoButtonCaption
-            .TooltipText = "Larger Titles and Legend"
-            .OnAction = "Increase_Titles_Legend"
-        End With
-
-        ' Button: Decrease title and legend
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "-Titles"
-            .Style = msoButtonCaption
-            .TooltipText = "Smaller Titles and Legend"
-            .OnAction = "Decrease_Titles_Legend"
-        End With
-
-        ' Button: Increase ticklabels
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "+Ticks"
-            .Style = msoButtonCaption
-            .TooltipText = "Larger Ticklabels"
-            .OnAction = "Increase_Ticklabels"
-        End With
-
-        ' Button: Decrease ticklabels
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "-Ticks"
-            .Style = msoButtonCaption
-            .TooltipText = "Smaller Ticklabels"
-            .OnAction = "Decrease_Ticklabels"
-        End With
-
-        ' Button: Remove background on active chart
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "Strip"
-            .Style = msoButtonCaption
-            .TooltipText = "Prepare selected chart for ppt"
-            .OnAction = "prepareChart"
-        End With
-
-        ' Button: Delete all charts on active sheets
-        ComBarContrl = ComBar.Controls.Add(Type:=msoControlButton)
-        With ComBarContrl
-            .Caption = "Del charts"
-            .Style = msoButtonCaption
-            .TooltipText = "Delete all charts on active sheets"
-            .OnAction = "DeleteAllCharts"
-        End With
 
 
-        Exit Sub
-ErrorHandler:
-        MsgBox("Error " & Err.Number & vbCr & Err.Description)
-        Exit Sub
-    End Sub
 
-
-    'Delete the toolbar called by workbook close
-    Sub DeleteToolbar()
-
-        On Error Resume Next
-        CommandBars("My Toolbar").Delete
-
-    End Sub
 
     'pdf print setup on active sheet
     Sub PrintSetup(Optional x As Integer = 24, Optional y As Integer = 3)
@@ -366,58 +249,58 @@ ErrorHandler:
         Dim i As Integer
         Dim j As Integer
 
-        Application.ScreenUpdating = False
+        UserForm1.excelApp.ScreenUpdating = False
 
-        With ActiveSheet
+        With UserForm1.excelWorkBook.ActiveSheet
 
             i = .ChartObjects(.ChartObjects.Count).BottomRightCell.Row
             .PageSetup.PrintArea = "$A$1:$P$" & i
             .ResetAllPageBreaks
-            ActiveWindow.View = xlPageBreakPreview
+            UserForm1.excelWorkBook.ActiveWindow.View = XlWindowView.xlPageBreakPreview
             On Error Resume Next
-            .VPageBreaks(1).DragOff xlToRight, 1
-    For j = y * x To i - 1 Step y * x
+            .VPageBreaks(1).DragOff(XlDirection.xlToRight, 1)
+            For j = y * x To i - 1 Step y * x
                 'On Error Resume Next
                 .HPageBreaks.Add.Range("A" & j + 1)
             Next j
 
         End With
 
-        Application.ScreenUpdating = True
+        UserForm1.excelApp.ScreenUpdating = True
 
 
 
     End Sub
 
 
-    Sub homeScroll()
+    Sub HomeScroll()
 
         Dim savedSht As Worksheet
         Dim sht As Worksheet
 
-        savedSht = ActiveSheet
+        savedSht = UserForm1.excelWorkBook.ActiveSheet
 
-        For Each sht In ActiveWorkbook.Worksheets
+        For Each sht In UserForm1.excelApp.ActiveWorkbook.Worksheets
             sht.Activate()
-            Application.Goto(Reference:=Range("A1"), Scroll:=True)
+            UserForm1.excelApp.Goto(Reference:=sht.Range("A1"), Scroll:=True)
         Next sht
 
         savedSht.Activate()
 
     End Sub
 
-    Sub scrollDown(Optional x As Integer = 48)
+    Sub ScrollDown(Optional x As Integer = 48)
 
         'x: number of rows to scroll down
 
         Dim savedSht As Worksheet
         Dim sht As Worksheet
 
-        savedSht = ActiveSheet
+        savedSht = UserForm1.excelWorkBook.ActiveSheet
 
-        For Each sht In ActiveWorkbook.Worksheets
+        For Each sht In UserForm1.excelApp.ActiveWorkbook.Worksheets
             sht.Activate()
-            Application.Goto(Reference:=ActiveCell.Offset(x), Scroll:=True)
+            UserForm1.excelApp.Goto(Reference:=sht.ActiveCell.Offset(x), Scroll:=True)
         Next sht
 
         savedSht.Activate()
@@ -431,18 +314,17 @@ ErrorHandler:
         Dim ws As Worksheet
         Dim i As Integer
         Dim chartCnt As Integer
-        Dim maxVal(1 To 1000) As Double
+        Dim maxVal(0 To 1000) As Double  'CHANGE: previous 1 to 1000
         'Dim maxCharts As Integer
-        Dim sh As Variant
-        Dim sheetName As Variant
+        Dim sheetName As String
+        Dim sh = New String() {"JAZZ", "ROCK", "SYMPH"}
 
-        sh = Array("JAZZ", "ROCK", "SYMPH")
 
         'by cycling through the sheets, get max value for each chart
         For i = LBound(maxVal) To UBound(maxVal)
             maxVal(i) = 0
             For Each sheetName In sh
-                ws = ActiveWorkbook.Sheets(sheetName)
+                ws = UserForm1.excelApp.ActiveWorkbook.Sheets(sheetName)
                 chartCnt = ws.ChartObjects.Count
                 If chartCnt >= 1 And i <= chartCnt Then
                     With ws.ChartObjects(i).Chart
@@ -454,7 +336,7 @@ ErrorHandler:
                             .Axes(XlAxisType.xlValue, XlAxisGroup.xlSecondary).Delete
                         End If
                         ' update previous maximum value
-                        maxVal(i) = WorksheetFunction.Max(maxVal(i), .Axes(XlAxisType.xlValue).MaximumScale)
+                        maxVal(i) = UserForm1.excelApp.WorksheetFunction.Max(maxVal(i), .Axes(XlAxisType.xlValue).MaximumScale)
                         .Axes(XlAxisType.xlValue).MinimumScale = 0
                     End With
                 End If
@@ -463,7 +345,7 @@ ErrorHandler:
 
         'set max value for each chart
         For Each sheetName In sh
-            ws = ActiveWorkbook.Sheets(sheetName)
+            ws = UserForm1.excelApp.ActiveWorkbook.Sheets(sheetName)
             With ws
                 chartCnt = .ChartObjects.Count
                 For i = 1 To chartCnt
@@ -475,63 +357,65 @@ ErrorHandler:
     End Sub
 
 
-    Sub arrChartsScen()
+    Sub ArrChartsScen()
         'move charts on sheets ROCK, SYMPH to JAZZ
 
         Dim n1 As Long
         Dim n2 As Long
         Dim n3 As Long
-        Dim sh As Variant
-        Dim s As Variant
+        Dim sh = New String() {"JAZZ", "ROCK", "SYMPH"}
+        Dim s As String
         Dim i As Integer
         Dim ch As ChartObject
 
-        sh = Array("JAZZ", "ROCK", "SYMPH")
+        With UserForm1.excelWorkBook
 
-        For Each s In sh
-            If Not WorksheetExists(s) Then
-                MsgBox("Sheet " & s & "does not exist. Cannot copy. Exiting.")
+            For Each s In sh
+                If Not WorksheetExists(s) Then
+                    MsgBox("Sheet " & s & "does not exist. Cannot copy. Exiting.")
+                    Exit Sub
+                End If
+            Next s
+
+            n1 = .Worksheets(sh(0)).ChartObjects.Count
+            n2 = .Worksheets(sh(1)).ChartObjects.Count
+            n3 = .Worksheets(sh(2)).ChartObjects.Count
+            If (n2 <> n3) Or (n1 <> n3) Or (n1 <> n2) Then
+                MsgBox("Different number of charts on " &
+     .Worksheets(sh(0)).Name & " / " & .Worksheets(sh(1)).Name & " / " & .Worksheets(sh(2)).Name &
+     " (" & n1 & " / " & n2 & " / " & n3 & "). Taking minimum.")
+                n1 = .WorksheetFunction.Min(n1, n2, n3)
+            End If
+
+            ' If there are no charts, do not move
+            If n1 = 0 Then
+                MsgBox("At least one scenario sheet has no charts. No charts to put side-by-side. Exiting.")
                 Exit Sub
             End If
-        Next s
 
-        n1 = Worksheets(sh(0)).ChartObjects.Count
-        n2 = Worksheets(sh(1)).ChartObjects.Count
-        n3 = Worksheets(sh(2)).ChartObjects.Count
-        If (n2 <> n3) Or (n1 <> n3) Or (n1 <> n2) Then
-            MsgBox("Different number of charts on " &
- Worksheets(sh(0)).Name & " / " & Worksheets(sh(1)).Name & " / " & Worksheets(sh(2)).Name &
- " (" & n1 & " / " & n2 & " / " & n3 & "). Taking minimum.")
-            n1 = WorksheetFunction.Min(n1, n2, n3)
-        End If
+            If Not UserForm1.selectRegions.Checked Then
+                Call UserForm1.OnStart()
+            End If
 
-        ' If there are no charts, do not move
-        If n1 = 0 Then
-            MsgBox("At least one scenario sheet has no charts. No charts to put side-by-side. Exiting.")
-            Exit Sub
-        End If
-
-        If Not UserForm1.selectRegions.Checked Then
-            Call UserForm1.OnStart()
-        End If
-
-        ' On the JAZZ sheet, arrange charts in single column to get more horizontal space
-        Worksheets(sh(0)).Select
-        ArrangeMyCharts(nColumns:=1)
+            ' On the JAZZ sheet, arrange charts in single column to get more horizontal space
+            .Worksheets(sh(0)).Select
+            ArrangeMyCharts(nColumns:=1)
 
 
-        For i = 1 To 2
-            Worksheets(sh(i)).Select
-            ArrangeMyCharts(nColumns:=1, shift:=i)     ' shift 1 or 2 chart-width to right
-            'Move charts ot JAZZ
-            For Each ch In Worksheets(sh(i)).ChartObjects
-                ch.Chart.Location(xlLocationAsObject, sh(0))
-            Next ch
-        Next i
+            For i = 1 To 2
+                .Worksheets(sh(i)).Select
+                ArrangeMyCharts(nColumns:=1, shift:=i)     ' shift 1 or 2 chart-width to right
+                'Move charts ot JAZZ
+                For Each ch In .Worksheets(sh(i)).ChartObjects
+                    ch.Chart.Location(XlChartLocation.xlLocationAsObject, sh(0))
+                Next ch
+            Next i
 
-        If Not UserForm1.selectRegions.Checked Then
-            Call UserForm1.OnEnd()
-        End If
+            If Not UserForm1.selectRegions.Checked Then
+                Call UserForm1.OnEnd()
+            End If
+
+        End With
 
     End Sub
 
@@ -540,26 +424,27 @@ ErrorHandler:
 
         ' Move charts back from JAZZ to ROCK and SYMPH sheets
 
-        Dim sh As Variant
+        Dim sh = New String() {"JAZZ", "ROCK", "SYMPH"}
         Dim n As Integer
         Dim i As Integer
         Dim j As Integer
         Dim k As Integer
         Dim idx As Integer
 
-        sh = Array("JAZZ", "ROCK", "SYMPH")
+        With UserForm1.excelWorkBook
 
-        ' If there are remaining charts in ROCK or SYMPH, do not move charts back
-        If Worksheets(sh(1)).ChartObjects.Count > 0 Or Worksheets(sh(2)).ChartObjects.Count > 0 Then
-            MsgBox("There are existing charts in " & sh(1) & " or " & sh(2) & ". Hence, charts are not moved back. Exiting.")
-            Exit Sub
-        End If
+            ' If there are remaining charts in ROCK or SYMPH, do not move charts back
+            If .Worksheets(sh(1)).ChartObjects.Count > 0 Or .Worksheets(sh(2)).ChartObjects.Count > 0 Then
+                MsgBox("There are existing charts in " & sh(1) & " or " & sh(2) & ". Hence, charts are not moved back. Exiting.")
+                Exit Sub
+            End If
 
+        End With
 
-        With Worksheets(sh(0))
+        With UserForm1.excelWorkBook.Worksheets(sh(0))
 
             k = .ChartObjects.Count
-            n = Application.WorksheetFunction.Floor(k / 3, 1)
+            n = UserForm1.excelApp.WorksheetFunction.Floor(k / 3, 1)
             If (k Mod 3) > 0 Then
                 MsgBox("The number " & k & " of charts on " & sh(0) & " is NOT a multiple of 3.")
             End If
@@ -573,31 +458,34 @@ ErrorHandler:
             For i = 1 To 2 Step 1
                 idx = k - i * n + 1
                 For j = 1 To n
-                    .ChartObjects(idx).Chart.Location Where:=xlLocationAsObject, Name:=sh(3 - i)
-            ' Chart object number is decremeted for higher chart object numbers, hence idx = const.
+                    .ChartObjects(idx).Chart.Location(Where:=XlChartLocation.xlLocationAsObject, Name:=sh(3 - i))
+                    ' Chart object number is decremeted for higher chart object numbers, hence idx = const.
                 Next j
             Next i
             .Select
-            ArrangeMyCharts nColumns:=2
+            ArrangeMyCharts(nColumns:=2)
 
-End With
+        End With
 
-        For i = 1 To 2
-            Worksheets(sh(i)).Select
-            ArrangeMyCharts nColumns:=2 ', reverse:=True 'account for reversed chart index
-        Next i
+        With UserForm1.excelWorkBook
 
-        If Not UserForm1.selectRegions.Checked Then
-            Call UserForm1.OnEnd()
-        End If
+            For i = 1 To 2
+                .Worksheets(sh(i)).Select
+                ArrangeMyCharts(nColumns:=2) ', reverse:=True 'account for reversed chart index
+            Next i
 
+            If Not UserForm1.selectRegions.Checked Then
+                Call UserForm1.OnEnd()
+            End If
+
+        End With
     End Sub
 
 
     Public Function WorksheetExists(ByVal WorksheetName As String) As Boolean
 
         On Error Resume Next
-        WorksheetExists = (ActiveWorkbook.Sheets(WorksheetName).Name <> "")
+        WorksheetExists = (UserForm1.excelApp.ActiveWorkbook.Sheets(WorksheetName).Name <> "")
         On Error GoTo 0
 
     End Function
@@ -620,9 +508,8 @@ End With
         'EASIA
         'PASIA
 
-        Dim sqlQuery() As Variant
-        sqlQuery = Array(
-"ALTER TABLE tblTRESULTS DROP CONSTRAINT tblITEMStblTRESULTS",
+        Dim sqlQuery() As String =
+        {"ALTER TABLE tblTRESULTS DROP CONSTRAINT tblITEMStblTRESULTS",
 "ALTER TABLE tblTRESULTS DROP CONSTRAINT tblITEMStblTRESULTS1",
 "ALTER TABLE tblTRESULTS DROP CONSTRAINT tblITEMStblTRESULTS2",
 "ALTER TABLE tblTRESULTS DROP CONSTRAINT tblITEMStblTRESULTS3",
@@ -642,14 +529,14 @@ End With
 "UPDATE tblTRESULTS SET Region = 'CENTASIA' WHERE Region IN ('CENASIA', 'INDIA')",
 "UPDATE tblTRESULTS SET Region = 'EASTASIA' WHERE Region IN ('CHINAREG', 'JPKRTW')",
 "UPDATE tblTRESULTS SET Region = 'PACIASIA' WHERE Region IN ('ASIAPAC', 'AUSNZL')"
-)
+}
 
         copyFileName = Left(answerFileName, Len(answerFileName) - 4) & "_aggregated.mdb"
-        MsgBox "new DB file name:" & copyFileName & ". Now copying ANSWER DB..."
-FileCopy answerFileName, copyFileName
-MsgBox "Copying finished. Removing MS Access DB Constraints and updating region names..."
+        MsgBox("new DB file name:" & copyFileName & ". Now copying ANSWER DB...")
+        FileCopy(answerFileName, copyFileName)
+        MsgBox("Copying finished. Removing MS Access DB Constraints and updating region names...")
 
-dbConnectStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & copyFileName & ";"
+        dbConnectStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & copyFileName & ";"
 
         cnt = New ADODB.Connection
         With cnt
@@ -657,11 +544,11 @@ dbConnectStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & copyFileName &
 
             For i = LBound(sqlQuery, 1) To UBound(sqlQuery, 1)
                 'MsgBox sqlQuery(i)
-                .Execute sqlQuery(i)
-    Next i
+                .Execute(sqlQuery(i))
+            Next i
         End With
-Set cnt = Nothing
-MsgBox("Finished. You may select now the copied and updated DB.")
+        cnt = Nothing
+        MsgBox("Finished. You may select now the copied and updated DB.")
 
     End Sub
 
@@ -673,10 +560,11 @@ MsgBox("Finished. You may select now the copied and updated DB.")
     Sub BW()
 
         Dim i As Integer
-        Dim ser As Series
+        'Dim ser As Series    'CHANGE: Late binding because mso cannot be found
+        Dim ser As Object
 
         i = 1
-        For Each ser In ActiveChart.SeriesCollection
+        For Each ser In UserForm1.excelApp.ActiveChart.SeriesCollection
             With ser
                 Select Case i
                     Case 1, 9
@@ -684,13 +572,13 @@ MsgBox("Finished. You may select now the copied and updated DB.")
                         .Fill.ForeColor.SchemeColor = 1
                         .Fill.BackColor.SchemeColor = 2
                         '.Fill.Visible = True
-                        .Fill.Patterned(msoPattern80Percent)
+                        .Fill.Patterned(11)   'msoPattern80Percent CHANGE
                     Case 2, 10
                         'diagional down
                         .Fill.ForeColor.SchemeColor = 1
                         .Fill.BackColor.SchemeColor = 2
                         '.Fill.Visible = True
-                        .Fill.Patterned(msoPatternLightDownwardDiagonal)
+                        .Fill.Patterned(21)   'msoPatternLightDownwardDiagonal CHANGE
                     Case 3, 11
                         'grey
                         .Interior.ColorIndex = 15
@@ -700,7 +588,7 @@ MsgBox("Finished. You may select now the copied and updated DB.")
                         .Fill.ForeColor.SchemeColor = 1
                         .Fill.BackColor.SchemeColor = 2
                         '.Fill.Visible = True
-                        .Fill.Patterned(msoPattern20Percent)
+                        .Fill.Patterned(3)   'msoPattern20Percent CHANGE
                     Case 5, 13
                         'black
                         .Interior.ColorIndex = 1
@@ -710,7 +598,7 @@ MsgBox("Finished. You may select now the copied and updated DB.")
                         .Fill.ForeColor.SchemeColor = 1
                         .Fill.BackColor.SchemeColor = 2
                         '.Fill.Visible = True
-                        .Fill.Patterned(msoPattern50Percent)
+                        .Fill.Patterned(7) 'msoPattern50Percent CHANGE
                     Case 7, 15
                         'white
                         .Interior.ColorIndex = 2
@@ -720,7 +608,7 @@ MsgBox("Finished. You may select now the copied and updated DB.")
                         .Fill.ForeColor.SchemeColor = 1
                         .Fill.BackColor.SchemeColor = 2
                         '.Fill.Visible = True
-                        .Fill.Patterned(msoPatternLightUpwardDiagonal)
+                        .Fill.Patterned(22) 'msoPatternLightUpwardDiagonal CHANGE
                 End Select
                 i = i + 1
             End With
@@ -732,53 +620,55 @@ MsgBox("Finished. You may select now the copied and updated DB.")
     Sub Excel2003Styles()
 
         Dim i As Integer
-        Dim ser As Series
-        'Dim ch As Excel.Chart
-        Dim co As Excel.ChartObject
+        'Dim ser As Series                 'CHANGE: Late binding because mso cannot be found
+        Dim ser As Object
+        'Dim ch As Chart
+        'Dim co As ChartObject
+        Dim co As Object                  'CHANGE: Late binding because mso cannot be found
 
-        For Each co In excelActiveSheet.ChartObjects
+        For Each co In UserForm1.excelApp.ActiveSheet.ChartObjects
 
             If co.Chart.HasLegend Then
                 With co.Chart.Legend
-                    .Format.Line.Visible = msoTrue
-                    .Format.Line.ForeColor.ObjectThemeColor = 13 'msoThemeColorText1
+                    .Format.Line.Visible = -1 'msoTrue
+                    .Format.Line.ForeColor.ObjectThemeColor = 13 'msoThemeColorText1 CHANGE
                     For i = 1 To .LegendEntries.Count
                         If co.Chart.ChartType <> XlChartType.xlLineMarkers Then
                             .LegendEntries(i).LegendKey.Select
-                            Selection.Format.Line.Visible = msoTrue
-                            Selection.Format.Line.ForeColor.ObjectThemeColor = 13 'msoThemeColorText1
+                            UserForm1.excelApp.Selection.Format.Line.Visible = -1 'msoTrue
+                            UserForm1.excelApp.Selection.Format.Line.ForeColor.ObjectThemeColor = 13 'msoThemeColorText1 CHANGE
                         Else
                             .LegendEntries(i).LegendKey.Select
-                            Selection.Format.Line.Visible = msoTrue
-                            Selection.Format.Line.Weight = 1
+                            UserForm1.excelApp.Selection.Format.Line.Visible = -1 'msoTrue
+                            UserForm1.excelApp.Selection.Format.Line.Weight = 1
                         End If
                     Next i
                     .Format.TextFrame2.TextRange.Font.Name = "Arial"
                 End With
             End If
 
-            For Each ser In ActiveChart.SeriesCollection
+            For Each ser In UserForm1.excelApp.ActiveChart.SeriesCollection
                 With ser
                     If co.Chart.ChartType = XlChartType.xlColumnStacked Then
-                        .Format.Line.Visible = msoTrue
+                        .Format.Line.Visible = -1 ' msoTrue CHANGE
                         .Format.Line.ForeColor.ObjectThemeColor = 13 'msoThemeColorText1
                     ElseIf co.Chart.ChartType = XlChartType.xlLineMarkers Then
                         'MsgBox .Format.Line.Weight
                         .Format.Line.Weight = 1
                     ElseIf co.Chart.ChartType = XlChartType.xlAreaStacked Then
-                        .Format.Line.Visible = msoTrue
+                        .Format.Line.Visible = -1 'msoTrue CHANGE
                         .Format.Line.Weight = 0.75
                     End If
                 End With
             Next ser
 
-            With co.Chart.Axes(xlValue)
+            With co.Chart.Axes(XlAxisType.xlValue)
                 .Format.Line.ForeColor.ObjectThemeColor = 13 'msoThemeColorText1
                 .AxisTitle.Format.TextFrame2.TextRange.Font.Name = "Arial"
                 .TickLabels.Font.Name = "Arial"
             End With
 
-            With co.Chart.Axes(xlCategory)
+            With co.Chart.Axes(XlAxisType.xlCategory)
                 .Format.Line.ForeColor.ObjectThemeColor = 13 'msoThemeColorText1
                 .TickLabels.Font.Name = "Arial"
                 If .HasTitle Then
@@ -793,9 +683,9 @@ MsgBox("Finished. You may select now the copied and updated DB.")
     End Sub
 
 
-    Function getRGB(c As String) As Integer()
+    Function GetRGB(c As String) As Integer()
 
-        Dim colArray As Variant
+        Dim colArray(10) As String  'CHANGE
         Dim lenColArray As Integer
         Dim colRet(3) As Integer
 
@@ -810,138 +700,138 @@ MsgBox("Finished. You may select now the copied and updated DB.")
             Next i
         End If
 
-        getRGB = colRet
+        GetRGB = colRet
 
     End Function
 
 
     Sub ResetColorPalette()
         ' Sub IS NO LONGER USED
-        excelWorkbook.Colors(1) = RGB(0, 0, 0)
-        excelWorkBook.Colors(2) = RGB(255, 255, 255)
-        ThisWorkbook.Colors(3) = RGB(255, 0, 0)
-        ThisWorkbook.Colors(4) = RGB(0, 255, 0)
-        ThisWorkbook.Colors(5) = RGB(0, 0, 255)
-        ThisWorkbook.Colors(6) = RGB(255, 255, 0)
-        ThisWorkbook.Colors(7) = RGB(255, 0, 255)
-        ThisWorkbook.Colors(8) = RGB(0, 255, 255)
-        ThisWorkbook.Colors(9) = RGB(128, 0, 0)
-        ThisWorkbook.Colors(10) = RGB(0, 128, 0)
-        ThisWorkbook.Colors(11) = RGB(0, 0, 128)
-        ThisWorkbook.Colors(12) = RGB(128, 128, 0)
-        ThisWorkbook.Colors(13) = RGB(128, 0, 128)
-        ThisWorkbook.Colors(14) = RGB(0, 128, 128)
-        ThisWorkbook.Colors(15) = RGB(192, 192, 192)
-        ThisWorkbook.Colors(16) = RGB(128, 128, 128)
-        ThisWorkbook.Colors(17) = RGB(153, 153, 255)
-        ThisWorkbook.Colors(18) = RGB(153, 51, 102)
-        ThisWorkbook.Colors(19) = RGB(255, 255, 204)
-        ThisWorkbook.Colors(20) = RGB(204, 255, 255)
-        ThisWorkbook.Colors(21) = RGB(102, 0, 102)
-        ThisWorkbook.Colors(22) = RGB(255, 128, 128)
-        ThisWorkbook.Colors(23) = RGB(0, 102, 204)
-        ThisWorkbook.Colors(24) = RGB(204, 204, 255)
-        ThisWorkbook.Colors(25) = RGB(0, 0, 128)
-        ThisWorkbook.Colors(26) = RGB(255, 0, 255)
-        ThisWorkbook.Colors(27) = RGB(255, 255, 0)
-        ThisWorkbook.Colors(28) = RGB(0, 255, 255)
-        ThisWorkbook.Colors(29) = RGB(128, 0, 128)
-        ThisWorkbook.Colors(30) = RGB(128, 0, 0)
-        ThisWorkbook.Colors(31) = RGB(0, 128, 128)
-        ThisWorkbook.Colors(32) = RGB(0, 0, 255)
-        ThisWorkbook.Colors(33) = RGB(0, 204, 255)
-        ThisWorkbook.Colors(34) = RGB(204, 255, 255)
-        ThisWorkbook.Colors(35) = RGB(204, 255, 204)
-        ThisWorkbook.Colors(36) = RGB(255, 255, 153)
-        ThisWorkbook.Colors(37) = RGB(153, 204, 255)
-        ThisWorkbook.Colors(38) = RGB(255, 153, 204)
-        ThisWorkbook.Colors(39) = RGB(204, 153, 255)
-        ThisWorkbook.Colors(40) = RGB(255, 204, 153)
-        ThisWorkbook.Colors(41) = RGB(51, 102, 255)
-        ThisWorkbook.Colors(42) = RGB(51, 204, 204)
-        ThisWorkbook.Colors(43) = RGB(153, 204, 0)
-        ThisWorkbook.Colors(44) = RGB(255, 204, 0)
-        ThisWorkbook.Colors(45) = RGB(255, 153, 0)
-        ThisWorkbook.Colors(46) = RGB(255, 102, 0)
-        excelWorkBook.Colors(47) = RGB(102, 102, 153)
-        Workbook.Colors(48) = RGB(150, 150, 150)
-        Workbook.Colors(49) = RGB(0, 51, 102)
-        Workbook.Colors(50) = RGB(51, 153, 102)
-        Workbook.Colors(51) = RGB(0, 51, 0)
-        Workbook.Colors(52) = RGB(51, 51, 0)
-        Workbook.Colors(53) = RGB(153, 51, 0)
-        Workbook.Colors(54) = RGB(153, 51, 102)
-        Workbook.Colors(55) = RGB(51, 51, 153)
-        Workbook.Colors(56) = RGB(51, 51, 51)
+        UserForm1.excelWorkBook.Colors(1) = RGB(0, 0, 0)
+        UserForm1.excelWorkBook.Colors(2) = RGB(255, 255, 255)
+        UserForm1.excelWorkBook.Colors(3) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(4) = RGB(0, 255, 0)
+        UserForm1.excelWorkBook.Colors(5) = RGB(0, 0, 255)
+        UserForm1.excelWorkBook.Colors(6) = RGB(255, 255, 0)
+        UserForm1.excelWorkBook.Colors(7) = RGB(255, 0, 255)
+        UserForm1.excelWorkBook.Colors(8) = RGB(0, 255, 255)
+        UserForm1.excelWorkBook.Colors(9) = RGB(128, 0, 0)
+        UserForm1.excelWorkBook.Colors(10) = RGB(0, 128, 0)
+        UserForm1.excelWorkBook.Colors(11) = RGB(0, 0, 128)
+        UserForm1.excelWorkBook.Colors(12) = RGB(128, 128, 0)
+        UserForm1.excelWorkBook.Colors(13) = RGB(128, 0, 128)
+        UserForm1.excelWorkBook.Colors(14) = RGB(0, 128, 128)
+        UserForm1.excelWorkBook.Colors(15) = RGB(192, 192, 192)
+        UserForm1.excelWorkBook.Colors(16) = RGB(128, 128, 128)
+        UserForm1.excelWorkBook.Colors(17) = RGB(153, 153, 255)
+        UserForm1.excelWorkBook.Colors(18) = RGB(153, 51, 102)
+        UserForm1.excelWorkBook.Colors(19) = RGB(255, 255, 204)
+        UserForm1.excelWorkBook.Colors(20) = RGB(204, 255, 255)
+        UserForm1.excelWorkBook.Colors(21) = RGB(102, 0, 102)
+        UserForm1.excelWorkBook.Colors(22) = RGB(255, 128, 128)
+        UserForm1.excelWorkBook.Colors(23) = RGB(0, 102, 204)
+        UserForm1.excelWorkBook.Colors(24) = RGB(204, 204, 255)
+        UserForm1.excelWorkBook.Colors(25) = RGB(0, 0, 128)
+        UserForm1.excelWorkBook.Colors(26) = RGB(255, 0, 255)
+        UserForm1.excelWorkBook.Colors(27) = RGB(255, 255, 0)
+        UserForm1.excelWorkBook.Colors(28) = RGB(0, 255, 255)
+        UserForm1.excelWorkBook.Colors(29) = RGB(128, 0, 128)
+        UserForm1.excelWorkBook.Colors(30) = RGB(128, 0, 0)
+        UserForm1.excelWorkBook.Colors(31) = RGB(0, 128, 128)
+        UserForm1.excelWorkBook.Colors(32) = RGB(0, 0, 255)
+        UserForm1.excelWorkBook.Colors(33) = RGB(0, 204, 255)
+        UserForm1.excelWorkBook.Colors(34) = RGB(204, 255, 255)
+        UserForm1.excelWorkBook.Colors(35) = RGB(204, 255, 204)
+        UserForm1.excelWorkBook.Colors(36) = RGB(255, 255, 153)
+        UserForm1.excelWorkBook.Colors(37) = RGB(153, 204, 255)
+        UserForm1.excelWorkBook.Colors(38) = RGB(255, 153, 204)
+        UserForm1.excelWorkBook.Colors(39) = RGB(204, 153, 255)
+        UserForm1.excelWorkBook.Colors(40) = RGB(255, 204, 153)
+        UserForm1.excelWorkBook.Colors(41) = RGB(51, 102, 255)
+        UserForm1.excelWorkBook.Colors(42) = RGB(51, 204, 204)
+        UserForm1.excelWorkBook.Colors(43) = RGB(153, 204, 0)
+        UserForm1.excelWorkBook.Colors(44) = RGB(255, 204, 0)
+        UserForm1.excelWorkBook.Colors(45) = RGB(255, 153, 0)
+        UserForm1.excelWorkBook.Colors(46) = RGB(255, 102, 0)
+        UserForm1.excelWorkBook.Colors(47) = RGB(102, 102, 153)
+        UserForm1.excelWorkBook.Colors(48) = RGB(150, 150, 150)
+        UserForm1.excelWorkBook.Colors(49) = RGB(0, 51, 102)
+        UserForm1.excelWorkBook.Colors(50) = RGB(51, 153, 102)
+        UserForm1.excelWorkBook.Colors(51) = RGB(0, 51, 0)
+        UserForm1.excelWorkBook.Colors(52) = RGB(51, 51, 0)
+        UserForm1.excelWorkBook.Colors(53) = RGB(153, 51, 0)
+        UserForm1.excelWorkBook.Colors(54) = RGB(153, 51, 102)
+        UserForm1.excelWorkBook.Colors(55) = RGB(51, 51, 153)
+        UserForm1.excelWorkBook.Colors(56) = RGB(51, 51, 51)
 
     End Sub
 
     Sub WECcolorPalette()
         ' SUB is no longer used
         'Regions
-        Workbook.Colors(3) = RGB(10, 63, 102)
-        Workbook.Colors(4) = RGB(33, 77, 129)
-        Workbook.Colors(5) = RGB(33, 107, 167)
-        Workbook.Colors(6) = RGB(48, 130, 191)
-        Workbook.Colors(7) = RGB(76, 156, 217)
-        Workbook.Colors(8) = RGB(117, 184, 235)
-        Workbook.Colors(9) = RGB(166, 206, 255)
-        Workbook.Colors(10) = RGB(3, 38, 64)
-        Workbook.Colors(11) = RGB(211, 219, 230)
+        UserForm1.excelWorkBook.Colors(3) = RGB(10, 63, 102)
+        UserForm1.excelWorkBook.Colors(4) = RGB(33, 77, 129)
+        UserForm1.excelWorkBook.Colors(5) = RGB(33, 107, 167)
+        UserForm1.excelWorkBook.Colors(6) = RGB(48, 130, 191)
+        UserForm1.excelWorkBook.Colors(7) = RGB(76, 156, 217)
+        UserForm1.excelWorkBook.Colors(8) = RGB(117, 184, 235)
+        UserForm1.excelWorkBook.Colors(9) = RGB(166, 206, 255)
+        UserForm1.excelWorkBook.Colors(10) = RGB(3, 38, 64)
+        UserForm1.excelWorkBook.Colors(11) = RGB(211, 219, 230)
         'Primary
-        Workbook.Colors(12) = RGB(213, 0, 50)
+        UserForm1.excelWorkBook.Colors(12) = RGB(213, 0, 50)
         'Fossil
-        Workbook.Colors(13) = RGB(166, 88, 43)
-        Workbook.Colors(14) = RGB(214, 154, 57)
-        Workbook.Colors(15) = RGB(235, 202, 132)
+        UserForm1.excelWorkBook.Colors(13) = RGB(166, 88, 43)
+        UserForm1.excelWorkBook.Colors(14) = RGB(214, 154, 57)
+        UserForm1.excelWorkBook.Colors(15) = RGB(235, 202, 132)
         'Renewables
-        Workbook.Colors(16) = RGB(188, 242, 55)
-        Workbook.Colors(17) = RGB(102, 145, 22)
-        Workbook.Colors(18) = RGB(51, 88, 0)
-        Workbook.Colors(19) = RGB(160, 153, 88)
-        Workbook.Colors(20) = RGB(181, 167, 69)
-        Workbook.Colors(21) = RGB(90, 195, 121)
-        Workbook.Colors(22) = RGB(46, 170, 151)
-        Workbook.Colors(23) = RGB(104, 36, 75)
-        Workbook.Colors(24) = RGB(157, 36, 75)
+        UserForm1.excelWorkBook.Colors(16) = RGB(188, 242, 55)
+        UserForm1.excelWorkBook.Colors(17) = RGB(102, 145, 22)
+        UserForm1.excelWorkBook.Colors(18) = RGB(51, 88, 0)
+        UserForm1.excelWorkBook.Colors(19) = RGB(160, 153, 88)
+        UserForm1.excelWorkBook.Colors(20) = RGB(181, 167, 69)
+        UserForm1.excelWorkBook.Colors(21) = RGB(90, 195, 121)
+        UserForm1.excelWorkBook.Colors(22) = RGB(46, 170, 151)
+        UserForm1.excelWorkBook.Colors(23) = RGB(104, 36, 75)
+        UserForm1.excelWorkBook.Colors(24) = RGB(157, 36, 75)
         ' Jazz
-        Workbook.Colors(25) = RGB(253, 237, 199)
+        UserForm1.excelWorkBook.Colors(25) = RGB(253, 237, 199)
         ' Symphony
-        Workbook.Colors(26) = RGB(228, 241, 245)
+        UserForm1.excelWorkBook.Colors(26) = RGB(228, 241, 245)
         ' Fossil
-        Workbook.Colors(27) = RGB(235, 132, 3)
+        UserForm1.excelWorkBook.Colors(27) = RGB(235, 132, 3)
         ' Renewables
-        Workbook.Colors(28) = RGB(137, 203, 57)
+        UserForm1.excelWorkBook.Colors(28) = RGB(137, 203, 57)
         ' Other
-        Workbook.Colors(29) = RGB(104, 36, 75)
+        UserForm1.excelWorkBook.Colors(29) = RGB(104, 36, 75)
         ' remaining: standard Excel colors
-        Workbook.Colors(30) = RGB(255, 0, 0)
-        Workbook.Colors(31) = RGB(0, 255, 0)
-        Workbook.Colors(32) = RGB(0, 0, 255)
-        Workbook.Colors(33) = RGB(255, 0, 0)
-        Workbook.Colors(34) = RGB(255, 0, 0)
-        Workbook.Colors(35) = RGB(255, 0, 0)
-        Workbook.Colors(36) = RGB(255, 0, 0)
-        Workbook.Colors(37) = RGB(255, 0, 0)
-        Workbook.Colors(38) = RGB(255, 0, 0)
-        Workbook.Colors(39) = RGB(255, 0, 0)
-        Workbook.Colors(40) = RGB(255, 0, 0)
-        Workbook.Colors(41) = RGB(255, 0, 0)
-        Workbook.Colors(42) = RGB(255, 0, 0)
-        Workbook.Colors(43) = RGB(255, 0, 0)
-        Workbook.Colors(44) = RGB(255, 0, 0)
-        Workbook.Colors(45) = RGB(255, 0, 0)
-        Workbook.Colors(46) = RGB(255, 0, 0)
-        Workbook.Colors(47) = RGB(255, 0, 0)
-        Workbook.Colors(48) = RGB(255, 0, 0)
-        Workbook.Colors(49) = RGB(255, 0, 0)
-        Workbook.Colors(50) = RGB(255, 0, 0)
-        Workbook.Colors(51) = RGB(255, 0, 0)
-        Workbook.Colors(52) = RGB(255, 0, 0)
-        Workbook.Colors(53) = RGB(255, 0, 0)
-        Workbook.Colors(54) = RGB(255, 0, 0)
-        Workbook.Colors(55) = RGB(255, 0, 0)
-        Workbook.Colors(56) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(30) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(31) = RGB(0, 255, 0)
+        UserForm1.excelWorkBook.Colors(32) = RGB(0, 0, 255)
+        UserForm1.excelWorkBook.Colors(33) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(34) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(35) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(36) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(37) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(38) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(39) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(40) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(41) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(42) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(43) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(44) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(45) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(46) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(47) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(48) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(49) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(50) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(51) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(52) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(53) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(54) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(55) = RGB(255, 0, 0)
+        UserForm1.excelWorkBook.Colors(56) = RGB(255, 0, 0)
 
     End Sub
 
@@ -955,28 +845,28 @@ MsgBox("Finished. You may select now the copied and updated DB.")
         'Dim index As Integer
         Dim RGBcol() As Integer
         Dim i As Integer
-  
- Set c = Worksheets("Sheet1").Range("A1:Z100").Find("Palette", LookIn:=xlValues, LookAt:=xlWhole)
- If c Is Nothing Then
+
+        c = UserForm1.excelWorkBook.Worksheets("Sheet1").Range("A1:Z100").Find("Palette", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlWhole)
+        If c Is Nothing Then
             MsgBox("Could not find the 'RGB->colorindex'-list in Range A1:Z100. The list should have 'Palette' as header.")
         Else
-    Set rgbList = Range(c.Offset(1, 0), c.End(xlDown))
-    palette = ActiveWorkbook.Colors
+            rgbList = UserForm1.excelWorkBook.Range(c.Offset(1, 0), c.End(XlDirection.xlDown))
+            palette = UserForm1.excelApp.ActiveWorkbook.Colors
             For Each r In rgbList.Rows
                 i = CInt(r.Cells(1, 1).Value)
                 If i < 1 Or i > 57 Then
-                    MsgBox "ExcelColor Index " & i & " must be in range 1-57"
-     Else
-                    RGBcol = getRGB(CStr(r.Cells(1, 2).Value))
+                    MsgBox("ExcelColor Index " & i & " must be in range 1-57")
+                Else
+                    RGBcol = GetRGB(CStr(r.Cells(1, 2).Value))
                     palette(i) = RGB(RGBcol(1), RGBcol(2), RGBcol(3))
                     r.Cells(1, 2).Interior.ColorIndex = i
                 End If
             Next r
-            ActiveWorkbook.Colors = palette
+            UserForm1.excelApp.ActiveWorkbook.Colors = palette
         End If
-        MsgBox "Excel's color palette updated from Table 'Palette' on 'Sheet1'."
+        MsgBox("Excel's color palette updated from Table 'Palette' on 'Sheet1'.")
 
-End Sub
+    End Sub
 
 
 
