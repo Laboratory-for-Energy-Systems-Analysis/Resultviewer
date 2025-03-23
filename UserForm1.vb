@@ -22,6 +22,10 @@
 'sqlComm.Connection.ConnectionString = ConfigurationManager.ConnectionStrings["MyWebService.Properties.Settings.dbConnString"].ConnectionString;
 
 
+
+'The workaround here Is easy:
+'Just open the AppDesigner For the VB-Project Properties And change the Startup Form To a valid setting. Recompile, done. This needs only To be done, When the Start Form gets renamed.
+
 Imports System.Configuration
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
@@ -38,10 +42,10 @@ Public Class UserForm1
     Public con As ADODB.Connection 'early binding
     Public rs As ADODB.Recordset 'early binding
 
-    Public excelApp As New Excel.Application
-    Public excelWorkBook As New Excel.Workbook
+    Public excelApp As Excel.Application
+    Public excelWorkBook As Excel.Workbook
     Public excelWorkSheets As Excel.Worksheets
-    Public excelWorkSheetOne As New Excel.Worksheet
+    Public excelWorkSheetOne As Excel.Worksheet
     Public excelActiveSheet As Excel.Worksheet
 
 

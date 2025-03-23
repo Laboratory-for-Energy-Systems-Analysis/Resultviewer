@@ -459,7 +459,7 @@ Partial Class UserForm1
         Controls.Add(Label1)
         Controls.Add(CreateExcelFile)
         Name = "UserForm1"
-        Text = "Form1"
+        Text = "UserForm1"
         ResumeLayout(False)
         PerformLayout()
     End Sub
