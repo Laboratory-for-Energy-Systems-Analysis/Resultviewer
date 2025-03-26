@@ -27,6 +27,8 @@
 'Just open the AppDesigner For the VB-Project Properties And change the Startup Form To a valid setting. Recompile, done. This needs only To be done, When the Start Form gets renamed.
 
 Imports System.Configuration
+Imports System.Runtime.InteropServices
+Imports ADODB
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
 
@@ -44,22 +46,35 @@ Public Class UserForm1
 
     Public excelApp As Excel.Application
     Public excelWorkBook As Excel.Workbook
-    Public excelWorkSheets As Excel.Worksheets
-    Public excelWorkSheetOne As Excel.Worksheet
-    Public excelActiveSheet As Excel.Worksheet
+
+    'Public excelWorkSheets As Excel.Worksheets
+    'Public excelWorkSheetOne As Excel.Worksheet
+    'Public excelActiveSheet As Excel.Worksheet
 
 
     Sub OpenExcelFile_Click(sender As Object, e As EventArgs) Handles OpenExcelFile.Click
 
         'Dim fn As String
 
-        'Dim excelApp = New Excel.Application
+        'excelApp = GetObject(, "Excel.Application")
+        excelApp = New Excel.Application
+        excelApp.Visible = True
         excelWorkBook = excelApp.Workbooks.Open(ResultviewerFileNameBox.Text)
-        excelWorkSheets = excelWorkBook.Worksheets()
-        excelWorkSheetOne = excelWorkBook.Worksheets("Sheet1")
-        excelActiveSheet = excelApp.ActiveSheet
+        'excelWorkSheets = excelWorkBook.Worksheets()
+        'excelWorkSheetOne = excelWorkBook.Worksheets("Sheet1")
+        'excelActiveSheet = excelApp.ActiveSheet
         'display the cells value B2
-        MsgBox(excelWorkSheetOne.Cells(2, 2).value)
+        MsgBox(excelWorkBook.Sheets("Sheet1").Cells(2, 2).value)
+
+
+        'If UserForm1 IsNot Nothing Then MsgBox("UserForm1 is not initialized.")
+        'End If
+        If excelWorkBook Is Nothing Then MsgBox("excelWorkBook is not initialized.")
+        If excelWorkBook IsNot Nothing Then MsgBox("excelWorkBook is initialized.")
+        If excelApp.ActiveChart IsNot Nothing Then MsgBox("excelApp.ActiveChart is not initialized.")
+
+
+
 
         'edit the cell with new value
         'WorkSheet.Cells(2, 2) = "test"
@@ -186,7 +201,7 @@ Public Class UserForm1
 
     Private Sub ConvertToBWButton_Click() Handles ConvertToBWButton.Click
 
-        Call BW()
+        Call BW(excelApp)
 
     End Sub
 
@@ -197,7 +212,7 @@ Public Class UserForm1
 
         'Iterate to search for chart numbers in column C, and then put "*" (if not "NA") in column B
         For i = 1 To 100
-            c = excelWorkSheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
+            c = excelWorkBook.Sheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
             If Not c Is Nothing Then  'CHANGE
                 If c.Offset(0, -1).Value <> "NA" Then
                     c.Offset(0, -1).Value = "*"
@@ -214,7 +229,7 @@ Public Class UserForm1
 
         'Iterate to search for chart numbers in column C, and then put "*" (if not "NA") in column A
         For i = 1 To 1000
-            c = excelWorkSheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
+            c = excelWorkBook.Sheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
             If Not c Is Nothing Then 'CHANGE
                 If c.Offset(0, -2).Value <> "NA" Then
                     c.Offset(0, -2).Value = "*"
@@ -230,7 +245,7 @@ Public Class UserForm1
         Dim c As Excel.Range
 
         For i = 1 To 100
-            c = excelWorkSheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
+            c = excelWorkBook.Sheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=Excel.XlFindLookIn.xlValues, LookAt:=Excel.XlLookAt.xlWhole)
             If Not c Is Nothing Then
                 If c.Offset(0, -2).Value <> "NA" Then
                     c.Offset(0, -2).Value = ""
@@ -260,9 +275,9 @@ Public Class UserForm1
 
 
         For i = 3 To 1000
-            val = excelWorkSheets("Sheet1").Cells(i, 5).Value
-            val2 = excelWorkSheets("Sheet1").Cells(i, 6).Value
-            valChck = excelWorkSheets("Sheet1").Cells(i, 3).Value
+            val = excelWorkBook.Sheets("Sheet1").Cells(i, 5).Value
+            val2 = excelWorkBook.Sheets("Sheet1").Cells(i, 6).Value
+            valChck = excelWorkBook.Sheets("Sheet1").Cells(i, 3).Value
             'If i < 20 Then
             '   MsgBox val2
             'End If
@@ -270,7 +285,7 @@ Public Class UserForm1
                 If RGBCheckBox.Checked Then
                     If wf.IsNumber(val2) Then
                         If (0 < val2 And val2 < 58) Then
-                            excelWorkSheets("Sheet1").Cells(i, 6).Interior.ColorIndex = CInt(val2)
+                            excelWorkBook.Sheets("Sheet1").Cells(i, 6).Interior.ColorIndex = CInt(val2)
                         Else
                             MsgBox("ColorIndex " & val2 & " of custom palette is out of range.")
                         End If
@@ -279,7 +294,7 @@ Public Class UserForm1
                     End If
                 ElseIf wf.IsNumber(val) Then
                     If (0 < val And val < 58) Then
-                        excelWorkSheets("Sheet1").Cells(i, 5).Interior.ColorIndex = CInt(val)
+                        excelWorkBook.Sheets("Sheet1").Cells(i, 5).Interior.ColorIndex = CInt(val)
                     Else
                         MsgBox("ColorIndex " & val & " of default palette is out of range.")
                     End If
@@ -300,7 +315,7 @@ Public Class UserForm1
 
     Sub ResetColorButton_Click() Handles ResetColorButton.Click
         'Workbook.ResetColors()
-        Call ResetColorPalette()
+        Call ResetColorPalette(excelWorkBook)
     End Sub
 
     Private Sub UserForm_Click()
@@ -457,11 +472,11 @@ Public Class UserForm1
         Dim c As Excel.Range
         Dim longName As String
 
-        c = excelWorkSheets("Sheet1").Range("A1:Z100").Find("Batch", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlWhole)
+        c = excelWorkBook.Sheets("Sheet1").Range("A1:Z100").Find("Batch", LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlWhole)
         If c Is Nothing Then
             MsgBox("Could not find list of cases in Range A1:Z100. The list as 'Batch' as header.")
         Else
-            caseList = excelWorkSheets("Sheet1").Range(c.Offset(1, 0), c.End(XlDirection.xlDown))
+            caseList = excelWorkBook.Sheets("Sheet1").Range(c.Offset(1, 0), c.End(XlDirection.xlDown))
             If Not selectRegions.Checked Then
                 Call OnStart()
             End If
@@ -548,7 +563,7 @@ Public Class UserForm1
         End If
 
         'add a sheet
-        oSheet = excelWorkSheets.Add()
+        oSheet = excelWorkBook.Sheets.Add()
         oSheet.Select()
 
         'name the new sheet, subtitle in caseNameLong
@@ -565,7 +580,7 @@ Public Class UserForm1
                 sheetName2 = sheetName & " (" & CStr(i) & ")"
                 i = i + 1
             Loop Until Not WorksheetExists(sheetName2)
-            excelWorkSheets(sheetName).Name = sheetName2
+            excelWorkBook.Sheets(sheetName).Name = sheetName2
         End If
         oSheet.Name = sheetName
 
@@ -576,7 +591,7 @@ Public Class UserForm1
         answerFile = FilenameBox.Text
 
         'set some info on the new sheet
-        With excelActiveSheet
+        With excelWorkBook.ActiveSheet
             .Range("A1").Value = "CaseName: " & caseName
             .Range("A2").Value = "Answer file: " & answerFileName
             .Range("A3").Value = Now
@@ -600,7 +615,7 @@ Public Class UserForm1
 
         'excute the global and local queries
         For i = 1 To 100
-            c = excelWorkSheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlWhole)
+            c = excelWorkBook.Sheets("Sheet1").Range("C1:C20000").Find(i, LookIn:=XlFindLookIn.xlValues, LookAt:=XlLookAt.xlWhole)
             If Not c Is Nothing Then
                 lTitle = CStr(c.Offset(0, 1).Value)
                 lUnit = CStr(c.Offset(1, 1).Value)
@@ -608,7 +623,7 @@ Public Class UserForm1
                 numFormat = IIf(String.IsNullOrEmpty(c.Offset(4, 1).Value), "0.0", CStr(c.Offset(4, 1).Value))
                 If Not String.IsNullOrEmpty(c.Offset(5, 1).Value) And
          Not String.IsNullOrEmpty(c.Offset(6, 1).Value) Then
-                    oRange = excelWorkSheets("Sheet1").Range(c.Offset(5, 1), c.Offset(5, 1).End(XlDirection.xlDown))
+                    oRange = excelWorkBook.Sheets("Sheet1").Range(c.Offset(5, 1), c.Offset(5, 1).End(XlDirection.xlDown))
                 Else
                     oRange = c.Offset(5, 1)
                 End If
@@ -797,10 +812,10 @@ Public Class UserForm1
 
                     ' add additional empty ("'") rows
                     If CType(c.Offset(0, 2).Value, String) <> "" Then
-                        emptyCell = excelActiveSheet.Cells(65536, 17).End(Excel.XlDirection.xlUp)
-                        addRows = c.Offset(0, 2).Value - (excelActiveSheet.Range(emptyCell.End(Excel.XlDirection.xlUp), emptyCell).Rows.Count - 3)
+                        emptyCell = excelWorkBook.ActiveSheet.Cells(65536, 17).End(Excel.XlDirection.xlUp)
+                        addRows = c.Offset(0, 2).Value - (excelWorkBook.ActiveSheet.Range(emptyCell.End(Excel.XlDirection.xlUp), emptyCell).Rows.Count - 3)
                         If addRows > 0 Then
-                            excelActiveSheet.Range(emptyCell.Offset(1), emptyCell.Offset(addRows)).Value = "'"
+                            excelWorkBook.ActiveSheet.Range(emptyCell.Offset(1), emptyCell.Offset(addRows)).Value = "'"
                         End If
                     End If
 
@@ -978,10 +993,10 @@ Public Class UserForm1
 
                             ' add additional empty ("'") rows
                             If CType(c.Offset(0, 2).Value, String) <> "" Then
-                                emptyCell = excelActiveSheet.Cells(65536, 17).End(Excel.XlDirection.xlUp)
-                                addRows = c.Offset(0, 2).Value - (excelActiveSheet.Range(emptyCell.End(Excel.XlDirection.xlUp), emptyCell).Rows.Count - 3)
+                                emptyCell = excelWorkBook.ActiveSheet.Cells(65536, 17).End(Excel.XlDirection.xlUp)
+                                addRows = c.Offset(0, 2).Value - (excelWorkBook.ActiveSheet.Range(emptyCell.End(Excel.XlDirection.xlUp), emptyCell).Rows.Count - 3)
                                 If addRows > 0 Then
-                                    excelActiveSheet.Range(emptyCell.Offset(1), emptyCell.Offset(addRows)).Value = "'"
+                                    excelWorkBook.ActiveSheet.Range(emptyCell.Offset(1), emptyCell.Offset(addRows)).Value = "'"
                                 End If
                             End If
 
@@ -1012,8 +1027,425 @@ Public Class UserForm1
 
 
 
+    'https://gist.github.com/mikelheim/9087511
+    'takes 2D array of any type and returns a transposed 2D array of same type. Vb.Net Function
+
+    Function MyTranspose(Of Array)(ByVal inArray As Array(,)) As Array(,)
+        Dim x = CInt(inArray.GetLength(1))
+        Dim y = CInt(inArray.GetLength(0))
+        Dim outArray(x - 1, y - 1) As Array
+
+        For i = 0 To x - 1
+            For j = 0 To y - 1
+                outArray(i, j) = inArray(j, i)
+            Next
+        Next
+        MyTranspose = outArray
+    End Function
+
+    'Public Function MyTranspose(ByVal vArr As Object) As Object
+    ' Dim lRow As Long
+    'Dim lCol As Long
+    'Dim vNewArray() As Object
+    '
+    'ReDim vNewArray(LBound(vArr, 2) To UBound(vArr, 2), LBound(vArr, 1) To UBound(vArr, 1))
+    'For lRow = LBound(vArr, 1) To UBound(vArr, 1)
+    'For lCol = LBound(vArr, 2) To UBound(vArr, 2)
+    '           vNewArray(lCol, lRow) = vArr(lRow, lCol)
+    'Next
+    'Next
+    '   MyTranspose = vNewArray
+    'End Function
+
+    Sub importData(answerFileName As String, lQuery As String, lTitle As String,
+               lUnit As String, lChart As String, lRange As Range, lType As Excel.XlChartType,
+               generateChart As Boolean, caseNameLong As String, lTitleShort As String, Optional numFormat As String = "0.0", Optional dH As Integer = 150, Optional dW As Integer = 200)
 
 
+        Dim nextFreeRow As Excel.Range
+        Dim resizedRange As Excel.Range
+        Dim myValues As Object
+        'Dim myValues2  As Variant
+        Dim nRows As Integer
+        Dim nCols As Integer
+        Dim i As Integer
+        Dim sFieldname As String
+        Dim dataRng As Excel.Range
+
+        'Excel 2007: Provider=Microsoft.ACE.OLEDB.12.0;
+        ' Needs:
+        ' Excel-> VBA Editor -> Tools -> References "Microsoft Active Data Objects 2.1 Library" (perhaps also: "...multidimensional 2.8 Library")
+
+        nextFreeRow = excelApp.ActiveSheet.Cells(65536, 17).End(XlDirection.xlUp)
+        'MsgBox ActiveSheet.Name
+        'MsgBox nextFreeRow.Row
+        'MsgBox nextFreeRow.Column
+        nextFreeRow = nextFreeRow.Offset(RowOffset:=3)
+        nextFreeRow.Value = lTitle & " (Units: " & lUnit & ")"
+        nextFreeRow = nextFreeRow.Offset(RowOffset:=1)
+        'MsgBox nextFreeRow.Row
+        'MsgBox nextFreeRow.Column
+
+        If speedImport Then
+
+
+            'Dim con         As ADODB.Connection 'early binding
+            ''Dim con         As Object 'late binding
+            'Dim conStr   As String
+            'Dim rs          As ADODB.Recordset 'early binding
+            ''Dim rs          As Object 'late binding
+
+
+            ''Set con = CreateObject("ADODB.connection") 'ADO; late binding
+            'Set con = New ADODB.Connection 'early binding
+            'conStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & answerFileName
+            'con.Open conStr
+            ''Set rs = CreateObject("ADODB.recordset") 'late binding
+            'Set rs = New ADODB.Recordset 'early binding
+            'If rs IsNot Nothing Then MsgBox("rs is defined")
+            'MsgBox(lQuery)
+            With rs
+                '.DataSource = lQuery
+                '.ActiveConnection = con
+                '.CursorType = ADODB.CursorTypeEnum.adOpenForwardOnly
+                .Open(lQuery, con, CursorTypeEnum.adOpenForwardOnly)
+                myValues = .GetRows
+                nRows = UBound(myValues, 1) + 1
+                nCols = UBound(myValues, 2) + 1
+                'MsgBox "Rows returned = " & nRows
+                'MsgBox "Cols returned = " & nCols
+                'MsgBox CStr(myValues)
+                'nextFreeRow.CopyFromRecordset .DataSource
+                'WorksheetFunction.Transpose(arr)
+
+
+                For i = 1 To .Fields.Count - 1
+                    sFieldname = .Fields(i).Name
+                    nextFreeRow.Offset(ColumnOffset:=i).Value = sFieldname
+                    nextFreeRow.Offset(ColumnOffset:=i).Font.Bold = True
+                    'MsgBox sFieldname
+                Next
+
+                resizedRange = nextFreeRow.Resize(nCols + 1, nRows)
+                nextFreeRow = nextFreeRow.Offset(RowOffset:=1)
+                dataRng = nextFreeRow.Resize(nCols, nRows)
+                'MsgBox "Rows in Range = " & dataRng.Rows.Count
+                'MsgBox "Cols in Range = " & dataRng.Columns.Count
+                'myValues2 = MyTranspose(myValues)
+                dataRng.Value = MyTranspose(myValues)
+
+                'MsgBox .Fields(0).Value
+            End With
+            ''Set thee cursor location.
+            'rs.CursorLocation = 3 'adUseClient on early  binding
+            'rs.CursorType = 1 'adOpenKeyset on early  binding
+            'rs.Open lQuery, con
+            ''Redim the table that will contain the filtered data.
+            'ReDim myValues(rs.RecordCount)
+            'If Not (rs.EOF And rs.BOF) Then
+            ' rs.MoveFirst
+            ' Dim dbcol As Integer
+            ' dbcol = 0
+            ' nextFreeRow.Value = rs(dbcol).Value
+            rs.Close()
+            'Set rs = Nothing
+            'con.Close
+            'Set con = Nothing
+
+        Else
+
+            Dim oQryTable As Object
+            oQryTable = excelApp.ActiveSheet.QueryTables.Add(
+   "OLEDB;Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & answerFileName & ";",
+   nextFreeRow, lQuery)
+            '"Select Region, Item1, Item2, Item3, CaseName, Parameter, T2000 from tblTRESULTS")
+            'make room for new rows
+            oQryTable.RefreshStyle = XlCellInsertionMode.xlInsertEntireRows
+            oQryTable.Refresh(False)
+
+            resizedRange = oQryTable.ResultRange
+
+            'MsgBox "Delete Query Table"
+            oQryTable.Delete
+
+        End If 'speedup or not
+
+        If Len(resizedRange.Rows(resizedRange.Rows.Count).Cells(1, 1).Value) = 0 Then
+            'MsgBox "Warning: Name of last data row is empty; the row will not be charted. Chart = " & lTitle
+            resizedRange = resizedRange.Resize(resizedRange.Rows.Count - 1)
+            'MsgBox resizedRange.Rows.Count
+            'MsgBox resizedRange.Columns.Count
+        End If
+        'MsgBox "Finished Table!"
+
+
+
+        Call permutate(resizedRange, lRange)
+
+        If lookupCheckBox.Checked Then
+            Call lookupCol(resizedRange, lRange, lTitleShort, caseNameLong)
+        End If
+
+        If generateChart Then
+            If StrComp(caseNameLong, "") <> 0 Then
+                lTitle = lTitle & Chr(10) & caseNameLong
+            End If
+            Call addChart(resizedRange, lTitle, lUnit, lRange, lType, lChart, dH, dW)
+        End If
+
+        'MsgBox "Finished Chart!"
+        resizedRange.Offset(1).Resize(resizedRange.Rows.Count - 1).NumberFormat = numFormat
+
+    End Sub
+
+
+    Sub addChart(lRange As Range, lTitle As String, lUnit As String, lcolorRange As Range, lChartType As Excel.XlChartType, lComment As String, dH As Integer, dW As Integer)
+
+        Dim chtChart As Chart
+        Dim lSheet As String
+
+        lSheet = excelApp.ActiveSheet.Name
+        chtChart = excelApp.ActiveSheet.Shapes.addChart(10, 10, dW, dH).Chart
+        'Set chtChart = chtChart.Location(WHERE:=xlLocationAsObject, Name:=lSheet)
+        With chtChart
+            .DisplayBlanksAs = XlDisplayBlanksAs.xlZero
+            .ChartType = lChartType
+            .SetSourceData(Source:=lRange, PlotBy:=XlRowCol.xlRows)
+            .HasTitle = True
+            'please comment the next line out if you are using Excel 2003
+            '.SetElement(2)   ' msoElementChartTitleAboveChart CHANGE
+            .HasTitle = True
+            .ChartTitle.Text = lTitle
+            .ChartTitle.Font.Bold = True
+            .PlotArea.Interior.ColorIndex = XlColorIndex.xlColorIndexNone
+            .PlotArea.Border.LineStyle = XlLineStyle.xlLineStyleNone
+            .ChartGroups(1).GapWidth = 20
+            .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).HasTitle = True
+            .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).AxisTitle.Characters.Text = lUnit
+            .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).AxisTitle.Font.Size = 11
+            .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).TickLabels.Font.Size = 10
+            .Axes(XlAxisType.xlValue, XlAxisGroup.xlPrimary).TickLabels.NumberFormatLinked = False
+            '.Axes(Excel.XlAxisType.xlValue, Excel.XlAxisGroup.xlPrimary).TickLabels.numberFormat = "General"
+            .Axes(XlAxisType.xlCategory, XlAxisGroup.xlPrimary).TickLabels.NumberFormat = "0"
+            .Axes(XlAxisType.xlCategory, XlAxisGroup.xlPrimary).TickLabels.Font.Size = 10
+            .Legend.Font.Size = 10
+            .ChartTitle.Font.Size = 12
+            .ChartArea.AutoScaleFont = False
+            .Axes(XlAxisType.xlValue).MajorGridlines.Border.ColorIndex = 48
+            .Axes(XlAxisType.xlValue).MajorGridlines.Border.Weight = XlBorderWeight.xlHairline
+            .Axes(XlAxisType.xlValue).MajorGridlines.Border.LineStyle = XlLineStyle.xlDot
+            If lComment <> vbNullString Then
+                .Axes(XlAxisType.xlCategory).HasTitle = True
+                .Axes(XlAxisType.xlCategory).AxisTitle.Text = lComment
+                .Axes(XlAxisType.xlCategory).AxisTitle.Font.Size = 7
+                .Axes(XlAxisType.xlCategory).AxisTitle.HorizontalAlignment = XlHAlign.xlHAlignLeft  'CHANGE!!!
+            End If
+            'The Parent property is used to set properties of
+            'the ChartObject, size etc.
+            'ActiveSheet.Range("A65536").End(xlUp).Row
+            '.Parent.Top = lRange.Top
+            '.Parent.Left = lRange.Columns(lRange.Columns.Count).Left + 9
+            '.Parent.Left = lRange.Columns(1).Left
+            'MsgBox lRange.Columns(lRange.Columns.Count).Left
+            'MsgBox lRange.Columns(lRange.Columns.Count).Left + 9
+            'MsgBox lRange.Columns.Count
+            'MsgBox lRange.Left
+
+            If .Legend.LegendEntries.Count = 1 Then
+                .Legend.Delete()
+            ElseIf .Legend.LegendEntries.Count > 15 Then
+                .Legend.Font.Size = 8
+            End If
+
+        End With
+
+        Call reColor(lcolorRange, chtChart)
+        'Worksheets(lSheet).Activate
+
+    End Sub
+
+
+
+    'This example sums the data in the first column of query table one. The sum of the first column is displayed below the data range.
+    'Set c1 = Sheets("sheet1").QueryTables(1).ResultRange.Columns(1)
+    'c1.Name = "Column1"
+    'c1.End(xlDown).Offset(2, 0).Formula = "=sum(Column1)"
+
+
+    Sub ArrangeMyCharts(Optional nColumns As Integer = 2,
+                    Optional shift As Integer = 0,
+                    Optional nRows As Double = 24,
+                    Optional nCols As Double = 8,
+                    Optional reverse As Boolean = False)
+
+        Dim iChart As Integer
+        Dim nCharts As Integer
+        Dim dTop As Integer
+        Dim dLeft As Integer
+        Dim dHeight As Integer
+        Dim dWidth As Integer
+        'Dim nColumns As Long
+
+        With excelApp
+
+            dHeight = nRows * .ActiveSheet.Rows(1).RowHeight ' height of all charts
+            dWidth = nCols * .ActiveSheet.Columns("A").Width ' width of all charts
+            dTop = 0      ' top of first row of charts
+            dLeft = shift * dWidth ' left of first column of charts
+            '    nColumns = 2   ' number of columns of charts
+            nCharts = .ActiveSheet.ChartObjects.Count
+
+        End With
+
+        If reverse Then
+            For iChart = 1 To nCharts
+                With excelApp.ActiveSheet.ChartObjects(iChart)
+                    .Height = dHeight
+                    .Width = dWidth
+                    .Top = dTop + Int(((nCharts - iChart + 1) - 1) / nColumns) * dHeight
+                    .Left = dLeft + (((nCharts - iChart + 1) - 1) Mod nColumns) * dWidth
+                End With
+            Next
+        Else
+            For iChart = 1 To nCharts
+                With excelApp.ActiveSheet.ChartObjects(iChart)
+                    .Height = dHeight
+                    .Width = dWidth
+                    .Top = dTop + Int((iChart - 1) / nColumns) * dHeight
+                    .Left = dLeft + ((iChart - 1) Mod nColumns) * dWidth
+                End With
+            Next
+        End If
+
+    End Sub
+
+    Sub AutoScale_Off()
+
+        Dim ws As Worksheet, co As ChartObject, i As Integer
+        Dim ch As Chart
+
+        With excelApp
+
+            For Each ws In .ActiveWorkbook.Worksheets
+                ' Go through each worksheet in the workbook
+                For Each co In ws.ChartObjects
+                    'In each chart turn the Auto Scale font feature off
+                    i = i + 1
+                    co.Chart.ChartArea.AutoScaleFont = False
+                Next co
+            Next ws
+            For Each ch In .ActiveWorkbook.Charts
+                'Go through each chart in the workbook
+                ch.ChartArea.AutoScaleFont = False
+                i = i + 1
+            Next
+            'MsgBox i & " charts have been altered"
+            'Application.DisplayAlerts = True
+
+        End With
+
+    End Sub
+
+    Sub permutate(r As Range, orderRange As Range)
+
+        Dim TempArray As Object
+        'Article ID: 169104 - Last Review: October 22, 2000 - Revision: 1.0
+        'XL97: Run-Time Error Using Macro to Add Custom List
+        ' -> workaround with a temp array
+
+        With excelApp
+
+            '    If orderRange.Rows.Count > 2 Then
+            '    TempArray = orderRange
+            '    excelApp.AddCustomList(ListArray:=CType(TempArray.Value, String()))
+            '   r.Sort(Key1:=r.Cells(2, 1), Order1:=XlSortOrder.xlDescending, Header:=XlYesNoGuess.xlYes,
+            'OrderCustom:= .CustomListCount + 1)
+            '.DeleteCustomList(.CustomListCount)
+            'End If
+
+        End With
+
+    End Sub
+
+    Sub lookupCol(r As Range, lRange As Range, lTitleShort As String, caseNameLong As String)
+
+        'caseNameLong is usually "", better to use caseName in Import
+
+        Dim tagName
+        Dim resizedRng As Excel.Range
+        Dim regional As Boolean
+
+        If r.Rows.Count - 1 > 0 Then
+            'exclude first (header) row
+            resizedRng = r.Offset(1, 0).Resize(r.Rows.Count - 1)
+
+            If (StrComp(CStr(r.Cells(1, 1).Value), "Region") = 0) Then
+                regional = True
+                lTitleShort = Strings.Right(lTitleShort, Len(lTitleShort) - Len("GLOBAL"))
+            Else
+                regional = False
+            End If
+
+            For Each tagName In resizedRng.Columns(1).Cells
+                If regional Then
+                    tagName.Offset(0, -2).Value = tagName.Value & lTitleShort
+                Else
+                    tagName.Offset(0, -2).Value = lTitleShort & "_" & tagName.Value
+                End If
+                tagName.Offset(0, -1).Value = "'"
+            Next tagName
+
+        End If
+
+    End Sub
+
+
+    Sub reColor(ref As Range, cht As Chart)
+
+        'Dim ser As Series
+        Dim ser As Object     'CHANGE: Use late binding, because mso is not defined in early binding
+        Dim refRow As Range
+        Dim val2
+        'Dim colArray
+
+        For Each ser In cht.SeriesCollection
+            With ser
+                For Each refRow In ref
+                    If (StrComp(CStr(refRow.Cells(1, 1).Value), .Name) = 0) Then
+                        val2 = refRow.Cells(1, 3).Value
+                        If cht.ChartType = XlChartType.xlColumnStacked Then
+                            If RGBCheckBox.Checked And Not IsNothing(val2) Then  ' CHANGE, previous IsEmpty
+                                'colArray = getRGB(CStr(val2))
+                                'ser.Interior.Color = RGB(colArray(1), colArray(2), colArray(3))
+                                .Interior.ColorIndex = CInt(val2)
+                                If refRow.Cells(1, 4).Value = "s" Then
+                                    .Fill.Patterned(16)    'msoPatternDarkUpwardDiagonal CHANGE
+                                End If
+                            Else
+                                .Interior.ColorIndex = CInt(refRow.Cells(1, 2).Value)
+                            End If
+                        End If
+                        If cht.ChartType = XlChartType.xlLineMarkers Then
+                            If RGBCheckBox.Checked And Not IsNothing(val2) Then ' CHANGE, previous IsEmpty
+                                'colArray = getRGB(CStr(val2))
+                                'ser.Border.Color = RGB(colArray(1), colArray(2), colArray(3))
+                                'ser.MarkerBackgroundColor = RGB(colArray(1), colArray(2), colArray(3))
+                                'ser.MarkerForegroundColor = RGB(colArray(1), colArray(2), colArray(3))
+                                .Border.ColorIndex = CInt(val2)
+                                .MarkerBackgroundColorIndex = CInt(val2)
+                                .MarkerForegroundColorIndex = CInt(val2)
+                            Else
+                                .Border.ColorIndex = CInt(refRow.Cells(1, 2).Value)
+                                .MarkerBackgroundColorIndex = CInt(refRow.Cells(1, 2).Value)
+                                .MarkerForegroundColorIndex = CInt(refRow.Cells(1, 2).Value)
+                            End If
+                        End If
+                    End If
+                Next refRow
+            End With
+        Next ser
+
+    End Sub
 
 
 

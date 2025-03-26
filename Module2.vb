@@ -1,6 +1,7 @@
 ﻿Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.VisualBasic
 Imports Windows.Win32.System
+Imports Excel = Microsoft.Office.Interop.Excel
 
 
 Public Module Module2
@@ -399,12 +400,12 @@ Public Module Module2
 
             ' On the JAZZ sheet, arrange charts in single column to get more horizontal space
             .Worksheets(sh(0)).Select
-            ArrangeMyCharts(nColumns:=1)
+            UserForm1.ArrangeMyCharts(nColumns:=1)
 
 
             For i = 1 To 2
                 .Worksheets(sh(i)).Select
-                ArrangeMyCharts(nColumns:=1, shift:=i)     ' shift 1 or 2 chart-width to right
+                UserForm1.ArrangeMyCharts(nColumns:=1, shift:=i)     ' shift 1 or 2 chart-width to right
                 'Move charts ot JAZZ
                 For Each ch In .Worksheets(sh(i)).ChartObjects
                     ch.Chart.Location(XlChartLocation.xlLocationAsObject, sh(0))
@@ -463,7 +464,7 @@ Public Module Module2
                 Next j
             Next i
             .Select
-            ArrangeMyCharts(nColumns:=2)
+            UserForm1.ArrangeMyCharts(nColumns:=2)
 
         End With
 
@@ -471,7 +472,7 @@ Public Module Module2
 
             For i = 1 To 2
                 .Worksheets(sh(i)).Select
-                ArrangeMyCharts(nColumns:=2) ', reverse:=True 'account for reversed chart index
+                UserForm1.ArrangeMyCharts(nColumns:=2) ', reverse:=True 'account for reversed chart index
             Next i
 
             If Not UserForm1.selectRegions.Checked Then
@@ -557,14 +558,22 @@ Public Module Module2
     End Sub
 
 
-    Sub BW()
+    Sub BW(xlApp As Excel.Application)
 
         Dim i As Integer
         'Dim ser As Series    'CHANGE: Late binding because mso cannot be found
         Dim ser As Object
 
+        ' Check if there is an active chart
+        If xlApp Is Nothing Then
+            MsgBox("Please activate a chart before running this operation.")
+            Exit Sub
+        End If
+
+
+
         i = 1
-        For Each ser In UserForm1.excelApp.ActiveChart.SeriesCollection
+        For Each ser In xlApp.ActiveChart.SeriesCollection
             With ser
                 Select Case i
                     Case 1, 9
@@ -705,64 +714,71 @@ Public Module Module2
     End Function
 
 
-    Sub ResetColorPalette()
+    Sub ResetColorPalette(oWB As Excel.Workbook)
+
+        'If UserForm1.excelWorkBook Is Nothing Then MsgBox("excelWorkBook not set in Module2.")
+        'If UserForm1.excelWorkBook IsNot Nothing Then MsgBox("excelWorkBook is initialized!.")
+        If oWB Is Nothing Then MsgBox("oWB is not initialized.")
+        If oWB IsNot Nothing Then MsgBox("oWB is initialized.")
+
+
         ' Sub IS NO LONGER USED
-        UserForm1.excelWorkBook.Colors(1) = RGB(0, 0, 0)
-        UserForm1.excelWorkBook.Colors(2) = RGB(255, 255, 255)
-        UserForm1.excelWorkBook.Colors(3) = RGB(255, 0, 0)
-        UserForm1.excelWorkBook.Colors(4) = RGB(0, 255, 0)
-        UserForm1.excelWorkBook.Colors(5) = RGB(0, 0, 255)
-        UserForm1.excelWorkBook.Colors(6) = RGB(255, 255, 0)
-        UserForm1.excelWorkBook.Colors(7) = RGB(255, 0, 255)
-        UserForm1.excelWorkBook.Colors(8) = RGB(0, 255, 255)
-        UserForm1.excelWorkBook.Colors(9) = RGB(128, 0, 0)
-        UserForm1.excelWorkBook.Colors(10) = RGB(0, 128, 0)
-        UserForm1.excelWorkBook.Colors(11) = RGB(0, 0, 128)
-        UserForm1.excelWorkBook.Colors(12) = RGB(128, 128, 0)
-        UserForm1.excelWorkBook.Colors(13) = RGB(128, 0, 128)
-        UserForm1.excelWorkBook.Colors(14) = RGB(0, 128, 128)
-        UserForm1.excelWorkBook.Colors(15) = RGB(192, 192, 192)
-        UserForm1.excelWorkBook.Colors(16) = RGB(128, 128, 128)
-        UserForm1.excelWorkBook.Colors(17) = RGB(153, 153, 255)
-        UserForm1.excelWorkBook.Colors(18) = RGB(153, 51, 102)
-        UserForm1.excelWorkBook.Colors(19) = RGB(255, 255, 204)
-        UserForm1.excelWorkBook.Colors(20) = RGB(204, 255, 255)
-        UserForm1.excelWorkBook.Colors(21) = RGB(102, 0, 102)
-        UserForm1.excelWorkBook.Colors(22) = RGB(255, 128, 128)
-        UserForm1.excelWorkBook.Colors(23) = RGB(0, 102, 204)
-        UserForm1.excelWorkBook.Colors(24) = RGB(204, 204, 255)
-        UserForm1.excelWorkBook.Colors(25) = RGB(0, 0, 128)
-        UserForm1.excelWorkBook.Colors(26) = RGB(255, 0, 255)
-        UserForm1.excelWorkBook.Colors(27) = RGB(255, 255, 0)
-        UserForm1.excelWorkBook.Colors(28) = RGB(0, 255, 255)
-        UserForm1.excelWorkBook.Colors(29) = RGB(128, 0, 128)
-        UserForm1.excelWorkBook.Colors(30) = RGB(128, 0, 0)
-        UserForm1.excelWorkBook.Colors(31) = RGB(0, 128, 128)
-        UserForm1.excelWorkBook.Colors(32) = RGB(0, 0, 255)
-        UserForm1.excelWorkBook.Colors(33) = RGB(0, 204, 255)
-        UserForm1.excelWorkBook.Colors(34) = RGB(204, 255, 255)
-        UserForm1.excelWorkBook.Colors(35) = RGB(204, 255, 204)
-        UserForm1.excelWorkBook.Colors(36) = RGB(255, 255, 153)
-        UserForm1.excelWorkBook.Colors(37) = RGB(153, 204, 255)
-        UserForm1.excelWorkBook.Colors(38) = RGB(255, 153, 204)
-        UserForm1.excelWorkBook.Colors(39) = RGB(204, 153, 255)
-        UserForm1.excelWorkBook.Colors(40) = RGB(255, 204, 153)
-        UserForm1.excelWorkBook.Colors(41) = RGB(51, 102, 255)
-        UserForm1.excelWorkBook.Colors(42) = RGB(51, 204, 204)
-        UserForm1.excelWorkBook.Colors(43) = RGB(153, 204, 0)
-        UserForm1.excelWorkBook.Colors(44) = RGB(255, 204, 0)
-        UserForm1.excelWorkBook.Colors(45) = RGB(255, 153, 0)
-        UserForm1.excelWorkBook.Colors(46) = RGB(255, 102, 0)
-        UserForm1.excelWorkBook.Colors(47) = RGB(102, 102, 153)
-        UserForm1.excelWorkBook.Colors(48) = RGB(150, 150, 150)
-        UserForm1.excelWorkBook.Colors(49) = RGB(0, 51, 102)
-        UserForm1.excelWorkBook.Colors(50) = RGB(51, 153, 102)
-        UserForm1.excelWorkBook.Colors(51) = RGB(0, 51, 0)
-        UserForm1.excelWorkBook.Colors(52) = RGB(51, 51, 0)
-        UserForm1.excelWorkBook.Colors(53) = RGB(153, 51, 0)
-        UserForm1.excelWorkBook.Colors(54) = RGB(153, 51, 102)
-        UserForm1.excelWorkBook.Colors(55) = RGB(51, 51, 153)
-        UserForm1.excelWorkBook.Colors(56) = RGB(51, 51, 51)
+        oWB.Colors(1) = RGB(0, 0, 0)
+        oWB.Colors(2) = RGB(255, 255, 255)
+        oWB.Colors(3) = RGB(255, 0, 0)
+        oWB.Colors(4) = RGB(0, 255, 0)
+        oWB.Colors(5) = RGB(0, 0, 255)
+        oWB.Colors(6) = RGB(255, 255, 0)
+        oWB.Colors(7) = RGB(255, 0, 255)
+        oWB.Colors(8) = RGB(0, 255, 255)
+        oWB.Colors(9) = RGB(128, 0, 0)
+        oWB.Colors(10) = RGB(0, 128, 0)
+        oWB.Colors(11) = RGB(0, 0, 128)
+        oWB.Colors(12) = RGB(128, 128, 0)
+        oWB.Colors(13) = RGB(128, 0, 128)
+        oWB.Colors(14) = RGB(0, 128, 128)
+        oWB.Colors(15) = RGB(192, 192, 192)
+        oWB.Colors(16) = RGB(128, 128, 128)
+        oWB.Colors(17) = RGB(153, 153, 255)
+        oWB.Colors(18) = RGB(153, 51, 102)
+        oWB.Colors(19) = RGB(255, 255, 204)
+        oWB.Colors(20) = RGB(204, 255, 255)
+        oWB.Colors(21) = RGB(102, 0, 102)
+        oWB.Colors(22) = RGB(255, 128, 128)
+        oWB.Colors(23) = RGB(0, 102, 204)
+        oWB.Colors(24) = RGB(204, 204, 255)
+        oWB.Colors(25) = RGB(0, 0, 128)
+        oWB.Colors(26) = RGB(255, 0, 255)
+        oWB.Colors(27) = RGB(255, 255, 0)
+        oWB.Colors(28) = RGB(0, 255, 255)
+        oWB.Colors(29) = RGB(128, 0, 128)
+        oWB.Colors(30) = RGB(128, 0, 0)
+        oWB.Colors(31) = RGB(0, 128, 128)
+        oWB.Colors(32) = RGB(0, 0, 255)
+        oWB.Colors(33) = RGB(0, 204, 255)
+        oWB.Colors(34) = RGB(204, 255, 255)
+        oWB.Colors(35) = RGB(204, 255, 204)
+        oWB.Colors(36) = RGB(255, 255, 153)
+        oWB.Colors(37) = RGB(153, 204, 255)
+        oWB.Colors(38) = RGB(255, 153, 204)
+        oWB.Colors(39) = RGB(204, 153, 255)
+        oWB.Colors(40) = RGB(255, 204, 153)
+        oWB.Colors(41) = RGB(51, 102, 255)
+        oWB.Colors(42) = RGB(51, 204, 204)
+        oWB.Colors(43) = RGB(153, 204, 0)
+        oWB.Colors(44) = RGB(255, 204, 0)
+        oWB.Colors(45) = RGB(255, 153, 0)
+        oWB.Colors(46) = RGB(255, 102, 0)
+        oWB.Colors(47) = RGB(102, 102, 153)
+        oWB.Colors(48) = RGB(150, 150, 150)
+        oWB.Colors(49) = RGB(0, 51, 102)
+        oWB.Colors(50) = RGB(51, 153, 102)
+        oWB.Colors(51) = RGB(0, 51, 0)
+        oWB.Colors(52) = RGB(51, 51, 0)
+        oWB.Colors(53) = RGB(153, 51, 0)
+        oWB.Colors(54) = RGB(153, 51, 102)
+        oWB.Colors(55) = RGB(51, 51, 153)
+        oWB.Colors(56) = RGB(51, 51, 51)
 
     End Sub
 
