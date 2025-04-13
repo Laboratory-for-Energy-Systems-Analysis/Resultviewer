@@ -1,0 +1,2168 @@
+
+ATTENTION: DO not use double multipliation in ACCESS queries: 3*0.001*SUM(). This will result in wrong results
+
+
+--- 1. Total Primary Energy Supply by Type
+
+  SELECT 'Biomass' AS Energy, <TMPL>0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-1,1)*T2000) AS 2000<TMPL>  
+  FROM tblTRESULTS 
+  WHERE CaseName = <SCENARIO> 
+    AND Parameter IN ('SUPFOS', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+    AND Region IN (<REGION>) 
+    AND Item2 IN   ('BDW', 'BOC', 'BST', 'BSU', 'BWO', 'BBDX', 'BETX', 'BNGX')
+    AND Item2 NOT LIKE 'ETL%' 
+UNION 
+   SELECT 'Oil' AS Energy,  <TMPL>0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-1,1)*T2000) AS 2000<TMPL>  
+   FROM tblTRESULTS 
+   WHERE CaseName = <SCENARIO> 
+     AND Parameter IN ('SUPFOS', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+     AND Region IN (<REGION>) 
+     AND Item2 IN ('DSX', 'GSX', 'OIX', 'OI1', 'OI2', 'OI3', 'OI4', 'OI5')
+ UNION 
+    SELECT 'Coal' AS Energy,   <TMPL>0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-1,1)*T2000) AS 2000<TMPL>  
+    FROM tblTRESULTS 
+    WHERE CaseName = <SCENARIO> 
+      AND Parameter IN ('SUPFOS', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+      AND Region IN (<REGION>) 
+      AND Item2 IN ('BCO', 'COA', 'HCX')
+ UNION 
+    SELECT 'Synfuel (Trade)' AS Energy, <TMPL>0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-1,1)*T2000) AS 2000<TMPL>  
+    FROM tblTRESULTS 
+    WHERE CaseName = <SCENARIO> 
+      AND Parameter IN ('SUPFOS', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+      AND Region IN (<REGION>) 
+      AND Item2 IN   ('HGX', 'FGX', 'FHX', 'BMTX') 
+ UNION       
+   SELECT 'Hydro' AS Energy, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>
+   FROM tblTRESULTS 
+   WHERE CaseName  = <SCENARIO> 
+     AND Parameter = 'OUTPUT.ELC'
+     AND Item1 = 'E31'
+     AND Region IN (<REGION>)
+ UNION
+    SELECT Energy, <TMPL> t1.TT2000 - IIF(ISNULL(t2.TT2000), 0.00, t2.TT2000) AS 2000 <TMPL>
+    FROM(        
+          (SELECT 'dummy' AS Dummy, 'Renewables' AS Energy, <TMPL>0.001*SUM(T2000) AS TT2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO> 
+             AND Parameter  = 'TOT.USEREN' 
+             AND Region IN (<REGION>) 
+           ) AS t1 
+          INNER JOIN 
+          (SELECT 'dummy' AS Dummy, <TMPL>0.001*SUM(T2000) AS TT2000<TMPL>  
+           FROM tblTRESULTS 
+             WHERE CaseName = <SCENARIO> 
+               AND Parameter  = 'OUTPUT.ELC' 
+               AND Item1 = 'E31'
+               AND Region IN (<REGION>) 
+           ) AS t2 
+           ON t1.Dummy = t2.Dummy
+    ) 
+ UNION
+     SELECT 'Nuclear' AS Energy, <TMPL>0.003*SUM(T2000) AS 2000<TMPL>  
+     FROM tblTRESULTS 
+     WHERE CaseName = <SCENARIO> 
+       AND Parameter  = 'OUTPUT.ELC' 
+       AND Item1 IN ('E21','E22') 
+       AND Region IN (<REGION>) 
+UNION
+     SELECT 'Electricity' AS Energy, <TMPL> 0.001*SUM(IIF(Item1 LIKE 'EXP%',-1,1)*T2000) AS 2000 <TMPL>  
+     FROM tblTRESULTS 
+     WHERE CaseName = <SCENARIO> 
+      AND Parameter = 'R_TSEPELC.L' 
+      AND Region IN (<REGION>) 
+ UNION 
+      SELECT 'Gas' AS Energy, <TMPL> 0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L' ,-1,1)*T2000) AS 2000 <TMPL>  
+      FROM tblTRESULTS 
+      WHERE CaseName = <SCENARIO> 
+      AND Region IN (<REGION>)
+      AND Parameter IN ('SUPFOS', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+      AND Item2 IN ('LNG', 'NGI', 'NGG', 'NG1', 'NG2', 'NG3', 'NG4', 'NG5', 'NG6')
+  UNION
+      SELECT 'Solar Fuels' AS Energy, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+      FROM tblTRESULTS 
+      WHERE CaseName = <SCENARIO> 
+        AND Parameter  = 'OUTOTH.PRC.A??' 
+        AND Item1 IN ('F42','H41','H41G') 
+        AND Region IN (<REGION>) 
+
+
+
+
+
+--- 2. Total Primary Energy Supply by Region Multiply electricity by 3
+
+
+
+SQLquery2 = 
+ SELECT Region, <TMPL> 0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L' OR (Parameter='R_TSEPELC.L' AND Item1 LIKE 'EXP%'),-1, IIF(Parameter = 'OUTPUT.ELC',3,1))*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS 
+ WHERE CaseName = <SCENARIO>
+   AND Region <> 'REGION0' 
+   AND( (  Parameter IN   ('SUPFOS', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')  
+           AND Item2 IN (  'BDW', 'BOC', 'BST', 'BSU', 'BWO', 'BBDX', 'BETX', 'BNGX',
+                           'DSX', 'GSX', 'OIX', 'OI1', 'OI2', 'OI3', 'OI4', 'OI5',
+                           'LNG', 'NGI', 'NGG', 'NG1', 'NG2', 'NG3', 'NG4', 'NG5', 'NG6',
+                           'BCO', 'COA', 'HCX',
+                           'HGX', 'FGX', 'FHX', 'BMTX')
+        )  
+        OR ( Parameter  = 'OUTPUT.ELC'     AND Item1 IN ('E21','E22') ) 
+        OR ( Parameter  = 'OUTOTH.PRC.A??' AND Item1 IN ('F42','H41','H41G') ) 
+        OR Parameter IN ('TOT.USEREN', 'R_TSEPELC.L') 
+     ) 
+ GROUP BY Region
+
+
+
+--- 3. CO2-Emissions
+
+  SELECT Region, <TMPL> 44/12*0.001*SUM(T2000) AS 2000 <TMPL>  
+  FROM tblTRESULTS                     
+  WHERE CaseName  = <SCENARIO> 
+    AND Parameter = 'EMISSION.L'       
+    AND Item2     = 'CO2'              
+  GROUP BY Region                      
+ 
+
+
+
+--- 4. CCS
+ 
+  SELECT Region,   <TMPL> 44 / 12 * 0.001 * SUM(T2000) AS 2000<TMPL>  
+  FROM tblTRESULTS                     
+  WHERE CaseName  = <SCENARIO> 
+    AND Parameter = 'EMISSION.L'       
+    AND Item2     = 'COS'              
+  GROUP BY Region                      
+ 
+
+
+
+--- 5. Fuels for Long-Range Cars
+
+  SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+  FROM 
+     (SELECT *, 
+       IIF(Item1 = 'BL01', 'Gasoline',        
+       IIF(Item1 = 'BL02', 'Bio-Ethanol',     
+       IIF(Item1 = 'BL03', 'Bio-Methanol',    
+       IIF(Item1 = 'BL04', 'Methanol',        
+       IIF(Item1 IN ('BL32','BL30'), 'Synfuel Green',   
+       IIF(Item1 IN ('BL33','BL23'), 'Synfuel',         
+       IIF(Item1 = 'BL05', 'Diesel',          
+       IIF(Item1 = 'BL06', 'Biofuel(Diesel)', 
+       IIF(Item1 = 'BL10', 'Bio-Syngas',      
+       IIF(Item1 = 'BL11', 'Natural Gas',     
+         'dummy1')))))))))) AS Fuel           
+      FROM tblTRESULTS                        
+      WHERE CaseName = <SCENARIO>     
+        AND Parameter = 'ACTIVITY.L'          
+        AND Region IN (<REGION>)      
+        AND Item1 IN ('BL01', 'BL02', 'BL03', 'BL04', 'BL32', 'BL33', 'BL23', 'BL30', 'BL05', 'BL06', 'BL10', 'BL11') 
+  ) GROUP BY Fuel
+UNION     
+  SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+  FROM 
+     (SELECT *, 
+       IIF(Item2 = 'HDN', 'Hydrogen',     
+       IIF(Item2 = 'ELC', 'Electricity',  
+         'dummy2')) AS Fuel               
+      FROM tblTRESULTS                    
+      WHERE CaseName = <SCENARIO> 
+        AND Parameter = 'FUELC_ENT_DM'    
+        AND Item3 IN ('T2')     
+        AND Region IN (<REGION>)  
+        AND Item2 IN ('HDN', 'ELC')       
+   ) GROUP BY Fuel
+
+   
+
+
+--- 6. Fuels for Short-Range Cars
+
+ same as above, just replaced T2 to T4
+    
+        SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+      FROM 
+     (SELECT *, 
+       IIF(Item1 = 'BL01', 'Gasoline',        
+       IIF(Item1 = 'BL02', 'Bio-Ethanol',     
+       IIF(Item1 = 'BL03', 'Bio-Methanol',    
+       IIF(Item1 = 'BL04', 'Methanol',        
+       IIF(Item1 IN ('BL32','BL30'), 'Synfuel Green',   
+       IIF(Item1 IN ('BL33','BL23'), 'Synfuel',         
+       IIF(Item1 = 'BL05', 'Diesel',          
+       IIF(Item1 = 'BL06', 'Biofuel(Diesel)', 
+       IIF(Item1 = 'BL10', 'Bio-Syngas',      
+       IIF(Item1 = 'BL11', 'Natural Gas',     
+         'dummy1')))))))))) AS Fuel           
+      FROM tblTRESULTS                        
+      WHERE CaseName = <SCENARIO>     
+        AND Parameter = 'ACTIVITY.L'          
+        AND Region IN (<REGION>)      
+        AND Item1 IN ('BL01', 'BL02', 'BL03', 'BL04', 'BL32', 'BL33', 'BL23', 'BL30', 'BL05', 'BL06', 'BL10', 'BL11') 
+     ) GROUP BY Fuel
+UNION     
+     SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+      FROM 
+     (SELECT *, 
+       IIF(Item2 = 'HDN', 'Hydrogen',     
+       IIF(Item2 = 'ELC', 'Electricity',  
+         'dummy2')) AS Fuel               
+      FROM tblTRESULTS                    
+      WHERE CaseName = <SCENARIO> 
+        AND Parameter = 'FUELC_ENT_DM'    
+        AND Item3 IN ('T4')     
+        AND Region IN (<REGION>)  
+        AND Item2 IN ('HDN', 'ELC')       
+     ) GROUP BY Fuel
+
+
+
+
+--- 7. Fuels for Cars
+    
+  same as above, just replaced T2 to T4
+    
+        SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+      FROM 
+     (SELECT *, 
+       IIF(Item1 = 'BL01', 'Gasoline',        
+       IIF(Item1 = 'BL02', 'Bio-Ethanol',     
+       IIF(Item1 = 'BL03', 'Bio-Methanol',    
+       IIF(Item1 = 'BL04', 'Methanol',        
+       IIF(Item1 IN ('BL32','BL30'), 'Synfuel Green',   
+       IIF(Item1 IN ('BL33','BL23'), 'Synfuel',         
+       IIF(Item1 = 'BL05', 'Diesel',          
+       IIF(Item1 = 'BL06', 'Biofuel(Diesel)', 
+       IIF(Item1 = 'BL10', 'Bio-Syngas',      
+       IIF(Item1 = 'BL11', 'Natural Gas',     
+         'dummy1')))))))))) AS Fuel           
+      FROM tblTRESULTS                        
+      WHERE CaseName = <SCENARIO>     
+        AND Parameter = 'ACTIVITY.L'          
+        AND Region IN (<REGION>)      
+        AND Item1 IN ('BL01', 'BL02', 'BL03', 'BL04', 'BL32', 'BL33', 'BL23', 'BL30', 'BL05', 'BL06', 'BL10', 'BL11') 
+     ) GROUP BY Fuel
+UNION     
+     SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+      FROM 
+     (SELECT *, 
+       IIF(Item2 = 'HDN', 'Hydrogen',     
+       IIF(Item2 = 'ELC', 'Electricity',  
+         'dummy2')) AS Fuel               
+      FROM tblTRESULTS                    
+      WHERE CaseName = <SCENARIO> 
+        AND Parameter = 'FUELC_ENT_DM'    
+        AND Item3 IN ('T2','T4')     
+        AND Region IN (<REGION>)  
+        AND Item2 IN ('HDN', 'ELC')       
+     ) GROUP BY Fuel
+
+
+
+
+---  8. Fuels in Transport
+
+ SELECT Technology, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+       IIF(Item2 IN ('GLR', 'DLR', 'OPR', 'AVT'),               'Oil Type',      
+       IIF(Item2 IN ('ALR'),                                    'Alc in other surf', 
+       IIF(Item2 IN ('HDN'),                                    'Hydrogen',      
+       IIF(Item2 IN ('ELC'),                                    'Electricity',   
+       IIF(Item2 IN ('CGR', 'CGR1'),                            'Gas Type',      
+       'Other (Coal)'))))) AS Technology           
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('T1','T2', 'T3', 'T4') 
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+  ) GROUP BY Technology                 
+
+
+
+--- 9. Technology Mix for Long-Range Cars
+
+ SELECT Technology, <TMPL> SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+  IIF(Item1 IN ( 'T2GI', 'T2GA', 'T2DI', 'T2DA'), 'Liquid Fuel ICEV', 
+  IIF(Item1 IN ('T2GH', 'T2DH'),                  'Liquid Fuel Hybrid', 
+  IIF(Item1 = 'T2EH',                             'Liquid Fuel Plug-in', 
+  IIF(Item1 = 'T2CI',                             'Gas Fuel ICEV', 
+  IIF(Item1 = 'T2CH',                             'Gas Fuel Hybrid', 
+  IIF(Item1 = 'T2HH',                             'Hydrogen Hybrid', 
+  IIF(Item1 = 'T2GF',                             'Gasoline Fuel Cell', 
+  IIF(Item1 = 'T2HF',                             'Hydrogen Fuel Cell', 
+  IIF(Item1 = 'T2EB',          'Electric Vehicle'  , Item1))))))))) AS Technology 
+ FROM tblTRESULTS 
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'USENRG.TRN_DMD_DM' 
+   AND Item2 = 'T2' 
+   AND Region IN (<REGION>) 
+) GROUP BY Technology
+
+ 
+
+--- 10. Technology Mix of Long-Range Cars (Detailed)
+
+ SELECT Technology,   <TMPL>SUM(T2000) AS 2000<TMPL>  
+ FROM 
+( SELECT *, Item1 AS Technology         
+  FROM tblTRESULTS                      
+  WHERE CaseName  = <SCENARIO>  
+   AND Parameter = 'USENRG.TRN_DMD_DM'  
+   AND Item2 = 'T2'                     
+   AND Region IN (<REGION>)     
+ ) GROUP BY Technology                   
+
+
+ 
+--- 11. Technology Mix for Short-Range Cars
+
+ SELECT Technology,   <TMPL>SUM(T2000) AS 2000<TMPL>  
+ FROM (SELECT *, 
+  IIF(Item1 IN ('T4GI'), 'Gasoline ICEV City',     
+  IIF(Item1 IN ('T4GA'), 'Gasoline Adv.ICEV City', 
+  IIF(Item1 IN ('T4GH'), 'Gasoline Hybrid City',   
+  IIF(Item1 IN ('T4HF'), 'Hydrogen Fuel Cell City', 
+  IIF(Item1 IN ('T4EH'), 'Plug-in Hybrid City',     
+  IIF(Item1 IN ('T4EB'), 'Electric Vehicle City', Item1)))))) AS Technology 
+ FROM tblTRESULTS 
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'USENRG.TRN_DMD_DM' 
+   AND Item2 = 'T4' 
+   AND Region IN (<REGION>) 
+) GROUP BY Technology
+
+
+
+--- 12. Technology Mix for all Cars
+
+ SELECT Technology, <TMPL> SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+  IIF(Item1 IN ('T2GI', 'T2GA', 'T2DI', 'T2DA', 'T4GI', 'T4GA'), 'Liquid Fuel ICEV', 
+  IIF(Item1 IN ('T2GH', 'T2DH', 'T4GH'), 'Liquid Fuel Hybrid',  
+  IIF(Item1 IN ('T2EH', 'T4EH'),         'Liquid Fuel Plug-in', 
+  IIF(Item1 = 'T2CI',                    'Gas Fuel ICEV',       
+  IIF(Item1 = 'T2CH',                    'Gas Fuel Hybrid',     
+  IIF(Item1 = 'T2HH',                    'Hydrogen Hybrid',     
+  IIF(Item1 = 'T2GF',                    'Gasoline Fuel Cell',  
+  IIF(Item1 IN ('T2HF','T4HF'),          'Hydrogen Fuel Cell',  
+  IIF(Item1 IN ('T2EB','T4EB'),          'Electric Vehicle'  , Item1))))))))) AS Technology 
+ FROM tblTRESULTS 
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'USENRG.TRN_DMD_DM' 
+   AND Item2 IN ('T2','T4') 
+   AND Region IN (<REGION>) 
+) GROUP BY Technology
+
+
+
+--- 13. New Long-Range Cars (FACTOR!)
+
+SELECT * FROM       
+(SELECT Technology,   <TMPL>$*SUM(T2000) AS 2000 <FAC> 1 / 1.5 <TMPL>  
+ FROM (SELECT 
+<TMPL>T2000 * 
+ IIF(Region IN ('AUSNZL'),1/135, IIF(Region IN ('ASIAPAC','LAC','BRAZIL'),1/156, IIF(Region IN ('CANMEX'),1/142, 
+ IIF(Region IN ('CENASIA','RUSSIA'),1/132, IIF(Region IN ('CHINAREG'),1/152, IIF(Region IN ('EEUR','SSAFRICA'),1/124, 
+ IIF(Region IN ('INDIA'),1/147, IIF(Region IN ('JPKRTW'),1/85,
+ IIF(Region IN ('USA','MENA'),1/182,1/140))))))))) AS T2000<TMPL>  , 
+  IIF(Item1 IN ( 'T2GI', 'T2GA', 'T2DI', 'T2DA'), 'Liquid Fuel ICEV', 
+  IIF(Item1 IN ('T2GH', 'T2DH'), 'Liquid Fuel Hybrid',   
+  IIF(Item1 IN ('T2EH'),         'Liquid Fuel Plug-in',  
+  IIF(Item1 IN ('T2CI'),         'Gas Fuel ICEV',        
+  IIF(Item1 IN ('T2CH'),         'Gas Fuel Hybrid',      
+  IIF(Item1 IN ('T2HH'),         'Hydrogen Hybrid',      
+  IIF(Item1 IN ('T2GF'),         'Gasoline Fuel Cell',   
+  IIF(Item1 IN ('T2HF'),         'Hydrogen Fuel Cell',   
+  IIF(Item1 IN ('T2EB'),         'Electric Vehicle','delete'))))))))) AS Technology 
+ FROM tblTRESULTS                     
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'INVEST.L'         
+   AND Region IN (<REGION>)   
+) GROUP BY Technology) WHERE Technology <> 'delete'
+
+
+
+--- 14. New Short-Range Cars (FACTOR!)
+
+SELECT * FROM       
+(SELECT Technology, <TMPL> $ * SUM(T2000) AS 2000 <FAC> 1 / 1.5 <TMPL>  
+ FROM (SELECT   <TMPL>1/150*T2000 AS T2000<TMPL>  , 
+  IIF(Item1 IN ('T4GI'), 'Gasoline ICEV City',               
+  IIF(Item1 IN ('T4GA'), 'Gasoline Adv.ICEV City',           
+  IIF(Item1 IN ('T4GH'), 'Gasoline Hybrid City',             
+  IIF(Item1 IN ('T4HF'), 'Hydrogen Fuel Cell City',           
+  IIF(Item1 IN ('T4EH'), 'Plug-in Hybrid City',               
+  IIF(Item1 IN ('T4EB'), 'Electric Vehicle City', 'delete')))))) AS Technology 
+ FROM tblTRESULTS                     
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'INVEST.L'         
+   AND Region IN (<REGION>)   
+) GROUP BY Technology) WHERE Technology <> 'delete'
+
+
+--- 15. New Cars (FACTOR!)
+
+SELECT * FROM       
+(SELECT Technology,   <TMPL> $ *SUM(T2000) AS 2000 <FAC> 1 / 1.5 <TMPL>  
+ FROM (SELECT 
+<TMPL>T2000 * 
+ IIF(Region IN ('AUSNZL'),1/135, IIF(Region IN ('ASIAPAC','LAC','BRAZIL'),1/156, IIF(Region IN ('CANMEX'),1/142, 
+ IIF(Region IN ('CENASIA','RUSSIA'),1/132, IIF(Region IN ('CHINAREG'),1/152, IIF(Region IN ('EEUR','SSAFRICA'),1/124, 
+ IIF(Region IN ('INDIA'),1/147, IIF(Region IN ('JPKRTW'),1/85,
+ IIF(Region IN ('USA','MENA'),1/182,1/140))))))))) AS T2000<TMPL>  , 
+  IIF(Item1 IN ('T2GI', 'T2GA', 'T2DI', 'T2DA', 'T4GI', 'T4GA'), 'Liquid Fuel ICEV', 
+  IIF(Item1 IN ('T2GH', 'T2DH', 'T4GH'), 'Liquid Fuel Hybrid',   
+  IIF(Item1 IN ('T2EH', 'T4EH'),         'Liquid Fuel Plug-in',  
+  IIF(Item1 IN ('T2CI'),                 'Gas Fuel ICEV',        
+  IIF(Item1 IN ('T2CH'),                 'Gas Fuel Hybrid',      
+  IIF(Item1 IN ('T2HH'),                 'Hydrogen Hybrid',      
+  IIF(Item1 IN ('T2GF'),                 'Gasoline Fuel Cell',   
+  IIF(Item1 IN ('T2HF', 'T4HF'),         'Hydrogen Fuel Cell',   
+  IIF(Item1 IN ('T2EB', 'T4EB'),         'Electric Vehicle','delete'))))))))) AS Technology 
+ FROM tblTRESULTS                     
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'INVEST.L'         
+   AND Region IN (<REGION>)   
+) GROUP BY Technology) WHERE Technology <> 'delete'
+
+
+
+
+
+--- 16. Fuel Refining and Synthesis
+
+SELECT * FROM  
+(SELECT Technology,   <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+   IIF(Item1 IN ('BB1', 'BC1', 'BS1', 'BWA', 'BW1', 'BW2', 'BW3', 'BW4', 'BW5', 'BO1'), 'Biofuels', 
+   IIF(Item1 IN ('H01', 'H01S', 'H01SF', 'H11', 'H11S', 'H21HP', 'H21HT', 'H21SI', 'H41', 'H42', 'H61', 
+                 'H71', 'H72', 'H73', 'H80', 'H90', 'H91', 'HBD11', 
+                 'HSD11', 'HSD70', 'HSD85', 'HSD90'), 'Hydrogen',     
+   IIF(Item1 = 'SRN',                  'Coal-to-Liquid',                     
+   IIF(Item1 IN ('NTF','NAF','F41'),   'Gas-to-Liquid',                
+   IIF(Item1 = 'HTF',                  'Hydrogen-to-Liquid',                 
+   IIF(Item1 IN ('BG1', 'BG2', 'BG3'), 'Green Bio-to-Liquid', 
+   IIF(Item1 IN ('HFG'),               'Green H2-to-Liquid',  
+   IIF(Item1 IN ('F42'),               'Green H2O-to-Liquid', 
+   IIF(Item1 IN ('H41G','H61G', 'H80G', 'H90G', 'H91G', 'HBD90'), 'Green Hydrogen', 
+   IIF(Item1 IN ('HNGAHP', 'HNGADL', 'HNGAAA'), 'Hydrogen-to-Gas',    
+   IIF(Item1 IN ('S3M'),                        'Gas-to-MeOH',                        
+   IIF(Item1 IN ('S4M'),                       'H2-to-MeOH',                         
+   IIF(Item1 IN ('SR9', 'SRA'),                'Oil products',                       
+   IIF(Item1 = 'SRM', 'Coal-to-MeOH', 'delete')))))))))))))) AS Technology 
+ FROM tblTRESULTS 
+ WHERE CaseName = <SCENARIO> 
+   AND Parameter IN ('OUTOTH.PRC.LIQ', 'OUTOTH.PRC.GAS', 'OUTOTH.PRC.A??', 'OUTOTH.CON.TOT') 
+   AND Region IN (<REGION>) 
+ ) GROUP BY Technology ) WHERE Technology <> 'delete' 
+
+
+
+--- 17. Biofuel Production
+
+SELECT * FROM
+ (SELECT Technology, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+   FROM (
+    SELECT *,
+     SWITCH( 
+     Item1 = 'BB1',          	'Ethanol from Cellulose/Stover',   
+     Item1 = 'BC1',          	'Ethanol from Corn',               
+     Item1 = 'BS1',          	'Ethanol from Sugar Crops',        
+     Item1 = 'BW5',          	'Methanol from Wood',              
+     Item1 = 'BO1',          	'Biofuel (Diesel) from Oil Crops', 
+     Item1 IN ('BW1','BW2'),       'Biodiesel (Green) from Wood',      
+     Item1 IN ('BG1','BG2','BG3'), 'Biofuel (Green) from Wood/Stover',
+     Item1 = 'BWA',          	'SNG from Anaerobic Waste',        
+     Item1 IN ('BW3','BW4'), 	'SNG from Wood', 
+     TRUE, 'delete'
+         ) AS Technology 
+    FROM tblTRESULTS 
+    WHERE CaseName = <SCENARIO> 
+      AND Parameter IN ('OUTOTH.PRC.LIQ', 'OUTOTH.PRC.GAS', 'OUTOTH.PRC.A??', 'OUTOTH.CON.TOT') 
+      AND Region IN (<REGION>)
+   ) GROUP BY Technology) WHERE Technology <> 'delete'      
+ 
+ 
+
+
+--- 18. Hydrogen Production (simplifed)
+
+   Switch is limited to 15   
+
+
+  SELECT [Primary Energy], <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL> 
+  FROM ( SELECT *, 
+	     SWITCH(
+                Item1 IN ('H01'),		'Coal Gasification',
+              	Item1 IN ('H01S','H01SF'),	'Coal Gasif. with CCS',
+ 		Item1 IN  ('H11', 'HBD11','HSD11'),	'Natural Gas Reforming' ,
+ 		Item1 IN  ('H11S', 'H71','H72','H73'),	'Natural Gas Ref. CCS',
+ 		Item1 IN ('H21HP'),			'Electricity (HP,Pink)',
+ 		Item1 IN  ('H21HT', 'H21SI'),		'Electricity (HT,CuCl,Pink)',
+ 		Item1 IN ('H61'),	'Wind Electrolysis' ,
+ 		Item1 IN  ('H80'),	'Biomass Gasification',
+ 		Item1 IN ('H61G'),		'Wind Elect. Green' , 
+ 		Item1 IN  ('H41', 'H42'),	'Solar Hydrolysis',  
+ 		Item1 IN  ('H41G'),		'Solar Green',
+ 		Item1 IN ('HSD70','HSD85'),	'Liquid Fuel Gasif.',
+ 		TRUE, 'dummy' 
+               ) AS [Primary Energy]   
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+      ) WHERE [Primary Energy]  <> 'dummy'
+     GROUP BY [Primary Energy] 
+ UNION
+  SELECT [Primary Energy], <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL> 
+  FROM ( SELECT *, 
+	     SWITCH(
+               	Item1 IN ('H90','HSD90','H91'), 'Electricity Mix' ,
+		Item1 IN ('H90G','H91G','HBD90'),'Electricity Green',
+ 		Item1 IN('H80G'),		'Biomass Gasific. (2nd Gen)',
+                TRUE, 'dummy' 
+               ) AS [Primary Energy]   
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+       ) WHERE [Primary Energy]  <> 'dummy'
+  GROUP BY [Primary Energy] 
+     
+
+
+
+
+
+
+
+
+---- 19. Hydrogen Production (Detail)
+
+         SELECT  'Coal Gasification'  AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN   ('H01')          
+UNION 
+         SELECT  'Coal Gas. with CCS'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H01S')      
+UNION 
+         SELECT  'Coal Gas. w/CCS Adv.'  AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H01SF')   
+UNION 
+         SELECT  'NGA Steam Ref.'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H11')    
+UNION 
+         SELECT  'NGA Steam Ref. with CCS'  AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H11S')    
+UNION 
+         SELECT  'Nucl. HP Electrl.'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H21HP') 
+UNION 
+         SELECT  'Nucl. HT Electrl.'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H21HT') 
+UNION 
+         SELECT  'Nucl. CuCl Cycle'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H21SI')       
+UNION 
+         SELECT  'Solar Zn/Zn0 to H2'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H41')       
+UNION 
+	SELECT  'Green H2 from Solar'    AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN   ('H41G') 
+UNION 
+         SELECT 'Solar Coke to H2'    AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H42')         
+UNION 
+         SELECT 'Central Wind+Electrl.'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H61')     
+UNION 
+	SELECT 'Green Wind+Electrl.'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN   ('H61G') 
+UNION 
+         SELECT 'NGA Autothermal Ref. with CCS'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H71')       
+UNION 
+         SELECT 'NGA Chemical Looping Ref. with CCS'  AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H72')                 
+UNION 
+	SELECT 'NGA Pyrolysis'    AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN  ('H73') 
+UNION 
+         SELECT 'Biomass Gasification'  AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H80')       
+UNION 
+	SELECT 'Biomass Gasific. (2nd Gen)'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN   ('H80G') 
+UNION 
+         SELECT 'Alkaline Electrolysis' AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN   ('H90')       
+UNION 
+         SELECT 'HP Electrolysis 2020'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('H91')      
+UNION 
+         SELECT 'Alkaline Elct.(Green)'  AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN   ('H90G')      
+UNION 
+	SELECT 'HP Elct. 2020 (Green)'    AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN  ('H91G')    
+UNION 
+         SELECT 'Dec. NGA Ref. 1500kg/d'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('HBD11')   
+UNION 
+         SELECT 'PEM'    AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN   ('HBD90')                     
+UNION 
+         SELECT 'Dec. NGA Ref. 100kg/d'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('HSD11')   
+UNION 
+         SELECT 'Dec. GSL Ref. 470kg/d'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('HSD70')   
+UNION 
+         SELECT 'Dec. Meth.Ref. 470kg/d'   AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('HSD85')   
+UNION 
+         SELECT 'Dec. Electrl. 100kg/d'  AS [Primary Energy],   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+           FROM tblTRESULTS 
+           WHERE CaseName = <SCENARIO>
+            AND Parameter IN ('OUTOTH.PRC.LIQ','OUTOTH.PRC.GAS','OUTOTH.PRC.A??','OUTOTH.CON.TOT')
+            AND Region IN (<REGION>) 
+            AND Item1 IN    ('HSD90')
+        
+
+
+--- 20. Use of Hydrogen
+
+     SELECT Technology,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+     FROM 
+     (SELECT *, 
+       IIF(Item1 IN ('I15', 'I23', 'I25'),     'Industry (Heat  Elc)', 
+       IIF(Item1 IN ('R12', 'R28'),            'ResCom. (Heat  Elc)', 
+       IIF(Item1 IN ('T17', 'T18'),            'Other Surface Transport',  
+       IIF(Item1 IN ('T2HH', 'T2HF', 'T4HF'),  'Car Transport',            
+       IIF(Item1 IN ('EH2'),                   'Fuel Cell Cogen Grid (Ind. Heat)', 
+        IIF(Item1 IN ('EH3'),                  'Fuel Cell Cogen Grid (RC Heat)',  
+       'Other')))))) AS Technology         
+       FROM tblTRESULTS                  
+       WHERE Parameter = 'FUELUSE.TCH'   
+       AND Item2 = 'HDN'                 
+       AND CaseName = <SCENARIO> 
+       AND Region IN (<REGION>)  
+      )GROUP BY Technology
+
+
+
+--- 21. Electricity Production
+ 
+  
+          SELECT 'Coal'               AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN   ('E01','E02','EIG','ES1','H01','E6C') 
+UNION 
+         SELECT 'Coal (with CCS)'    AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN ('EC2','EIC','H01SF') 
+UNION 
+         SELECT 'Oil'               AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN ('E70')                        
+ UNION 
+         SELECT 'Gas'                AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN ('E11','E12','E13','E15','E6A') 
+UNION 
+         SELECT 'Gas (with CCS)'    AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('E1C')                        
+ UNION 
+         SELECT 'Nuclear'            AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN   ('E21','E22')                  
+ UNION 
+         SELECT 'Hydro'              AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN    ('E31')                        
+ UNION 
+         SELECT 'Solar'              AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('E41','E41B','E42')                   
+UNION 
+         SELECT 'Wind'               AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('E61','E62')                  
+ UNION 
+         SELECT 'Biomass'           AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('BW2', 'BW5', 'BWA','E80','BB1','E82')  
+UNION 
+         SELECT 'Biomass (with CCS)'   AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('E83')                      
+UNION 
+         SELECT 'Geothermal'         AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('E81')                        
+ UNION 
+         SELECT 'Hydrogen CoGen'     AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('EH2','EH3') 
+UNION 
+        SELECT 'Nuclear (decentral)' AS [Primary Energy], <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('FUELUSE.TCH') 
+           AND Region IN (<REGION>) 
+           AND Item2 IN  ('ETLH21HP','ETLH21HT', 'ETLH21SI') 
+         
+         
+
+
+--- 22. Renewable Electricity Production
+   
+  
+         SELECT 'Hydro'    AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN ('E31')       
+UNION 
+         SELECT 'Solar'    AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('E41','E41B','E42') 
+UNION 
+         SELECT 'Wind'   AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN ('E61','E62') 
+UNION 
+         SELECT 'Biomass'   AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN ('BW2', 'BW5', 'BWA','E80','BB1','E82') 
+UNION 
+         SELECT 'Biomass (with CCS)'   AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN ('E83')      
+ UNION 
+         SELECT 'Geothermal'  AS [Primary Energy],   <TMPL>1/3.6*SUM(T2000) AS 2000<TMPL>  
+          FROM tblTRESULTS 
+          WHERE CaseName = <SCENARIO>
+           AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+           AND Region IN (<REGION>) 
+           AND Item1 IN  ('E81')
+           
+
+
+--- '23. Electricity CO2 Emissions
+ 
+ SELECT 'Intensity' AS Intensity, <TMPL> t1.T2000/t2.T2000 AS 2000 <TMPL>  
+ FROM 
+ (SELECT '1' AS dummy, <TMPL> 1/3600*SUM(T2000) AS T2000 <TMPL>  
+  FROM tblTRESULTS 
+  WHERE CaseName = <SCENARIO>
+    AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+    AND Region IN (<REGION>) ) AS t2 
+  LEFT JOIN 
+  (SELECT '1' AS dummy, <TMPL> SUM(T2000) AS T2000 <TMPL>  
+   FROM (  
+     	SELECT 'Coal' AS Tech,  <TMPL> (44 / 12) * 0.001 * 0.0258 * SUM(T2000) AS T2000 <TMPL>  
+	 FROM tblTRESULTS 
+ 	WHERE   Parameter = 'FUELUSE.TCH'         
+         AND CaseName = <SCENARIO> 
+         AND Region IN (<REGION>)    
+         AND Item1 IN ('E01','E02','EIG','ES1','H01','EIG','E6C') 
+     UNION   
+    	SELECT 'Coal with CSS' AS Tech, <TMPL> (44 / 12) * 0.001 * 0.0258 * 0.15 * SUM(T2000) AS T2000 <TMPL>  
+ 	FROM tblTRESULTS 
+	 WHERE   Parameter = 'FUELUSE.TCH'         
+     	  AND CaseName = <SCENARIO> 
+          AND Region IN (<REGION>)   
+          AND Item1 IN ('EC2','EIC','H01SF')   
+    UNION   
+     	SELECT 'Gas' AS Tech, <TMPL> (44 / 12) * 0.001 * 0.0153 * SUM(T2000) AS T2000 <TMPL>  
+    	 FROM tblTRESULTS 
+     	WHERE  Parameter = 'FUELUSE.TCH'         
+     	  AND CaseName = <SCENARIO> 
+      	AND Region IN (<REGION>) AND Item1 IN ('E11','E12','E13','E15','E6A')   
+    UNION   
+     	SELECT 'Gas with CCS' AS Tech,  <TMPL> (44 / 12) * 0.001 * 0.0153 * 0.15 * SUM(T2000) AS T2000 <TMPL>  
+     	FROM tblTRESULTS 
+     	WHERE   Parameter = 'FUELUSE.TCH'         
+      	AND CaseName = <SCENARIO> 
+      	AND Region IN (<REGION>)    AND Item1 IN ('E1C')    
+    UNION   
+      	SELECT 'Oil' AS Tech,  <TMPL> (44 / 12) * 0.001 * 0.0201 * SUM(T2000) AS T2000 <TMPL>  
+ 	FROM tblTRESULTS 
+ 	WHERE   Parameter = 'FUELUSE.TCH'         
+         AND CaseName = <SCENARIO> 
+     	  AND Region IN (<REGION>)    AND Item1 IN ('E70')   
+      )   
+) AS t1 ON t1.dummy = t2.dummy
+
+
+
+--- 24. BEV CO2 Emission
+
+SELECT TOP 1 'ICE(TtW) WEUR' AS Em,  <TMPL> 0 AS T2000 <TMPL>  
+FROM tblTIDDATA
+
+
+
+---25. Oil Depletion
+
+
+SELECT * FROM ( 
+SELECT Technology,   <TMPL>0.001 * SUM(T2000) AS 2000 <TMPL>  
+FROM ( 
+ SELECT Technology,                                            
+  y0 AS T2010,                                                 
+  y0 - 10*( 3/4*y1+1/4*y2                           ) AS T2020,
+  y0 - 10*(                 y1+y2                   ) AS T2030,
+  y0 - 10*( 3/4*y3+1/4*y4  +y1+y2                   ) AS T2040,
+  y0 - 10*(                 y1+y2+y3+y4             ) AS T2050,
+  y0 - 10*( 3/4*y5+1/4*y6  +y1+y2+y3+y4             ) AS T2060,
+  y0 - 10*(                 y1+y2+y3+y4+y5+y6       ) AS T2070,
+  y0 - 10*( 3/4*y7+1/4*y8  +y1+y2+y3+y4+y5+y6       ) AS T2080,
+  y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2090,
+  y0 - 10*( 3/4*y9+1/4*y10 +y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2100,
+  y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8+y9+y10 ) AS T2110 
+ FROM ( 
+ SELECT 
+  IIF(t1.Item1 = 'MINOI11', 'Category I',   
+  IIF(t1.Item1 = 'MINOI21', 'Category II',  
+  IIF(t1.Item1 = 'MINOI31', 'Category III', 
+  IIF(t1.Item1 = 'MINOI41', 'Category IV',  
+  IIF(t1.Item1 = 'MINOI51', 'Category V',   
+  IIF(t1.Item1 = 'MINOI61', 'Category VI', t1.Item1 )))))) AS Technology, 
+   t1.Value AS y0,                          
+IIF(2020 < 2020,   IIF(ISNULL(t2.T2010),0,t2.T2010),  0)   AS y1,  
+   IIF(ISNULL(t2.T2020),0,t2.T2020) AS y2,  
+   IIF(ISNULL(t2.T2030),0,t2.T2030) AS y3,  
+   IIF(ISNULL(t2.T2040),0,t2.T2040) AS y4,  
+   IIF(ISNULL(t2.T2050),0,t2.T2050) AS y5,  
+   IIF(ISNULL(t2.T2060),0,t2.T2060) AS y6,  
+   IIF(ISNULL(t2.T2070),0,t2.T2070) AS y7,  
+   IIF(ISNULL(t2.T2080),0,t2.T2080) AS y8,  
+   IIF(ISNULL(t2.T2090),0,t2.T2090) AS y9, 
+   IIF(ISNULL(t2.T2100),0,t2.T2100) AS y10, 
+   IIF(ISNULL(t2.T2110),0,t2.T2110) AS y11  
+  FROM tblTIDDATA AS t1                            
+  LEFT JOIN                                        
+  (SELECT * FROM tblTRESULTS                       
+    WHERE Parameter = 'RESOURCE.L'                 
+      AND CaseName  = <SCENARIO> ) AS t2   
+  ON t1.Item1 = t2.Item1                           
+    AND t1.Region = t2.Region                      
+  WHERE t1.Parameter = 'CUM'                       
+   AND t1.ScenarioName IN (<PARAM1>) 
+   AND t1.Region IN (<REGION>)             
+   AND t1.Item1 LIKE 'MINOI%' 
+  ) ) GROUP BY Technology ) 
+WHERE Technology <> 'Category IV' 
+
+
+
+
+--- 26. Oil Production
+ 
+ SELECT Region, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                                     
+ WHERE Parameter = 'OUTOTH.PRC.LIQ'                   
+  AND Item1 IN ('S13','S14','S15','S16','S17')        
+  AND CaseName = <SCENARIO>                  
+ GROUP BY Region 
+
+
+
+--- 27. Gas Production
+
+ SELECT Region, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                                     
+ WHERE Parameter = 'OUTOTH.PRC.GAS'                   
+  AND Item1 IN ('S18','S19','S1A','S1B','S1C','S1D')  
+  AND CaseName = <SCENARIO>                  
+ GROUP BY Region 
+
+
+
+--- 28. Coal Production
+
+ SELECT Region, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                                     
+ WHERE Parameter = 'OUTOTH.PRC.SLD'                   
+  AND Item1 IN ('S11','S12')  
+  AND CaseName  = <SCENARIO>                  
+ GROUP BY Region 
+
+
+
+--- 29. Biomass Production
+
+ SELECT Region, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS 
+ WHERE CaseName = <SCENARIO>
+   AND Region <> 'REGION0' 
+   AND Parameter IN ('OUTOTH.PRC.A??')
+   AND Item1 IN ('BWTD','BL26', 'OCTD','CGTD','SUTD','STTD','DWTD') 
+   AND Item2 NOT LIKE 'ETL%'
+ GROUP BY Region
+
+
+
+--- '30. Cost of Energy Carriers
+
+
+ SELECT 'Gasoline (LDV, b)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M' AND Item2 = 'GLR'
+ UNION
+ SELECT 'Natural Gas (LDV, b)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE  CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M' AND Item2 = 'CGR'
+UNION
+ SELECT 'Diesel (LDV, b)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M' AND Item2 = 'DLR'
+UNION
+ SELECT 'Hydrogen' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE  CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M' AND Item2 = 'HDN'
+ UNION
+ SELECT 'Electricity (m)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ELC.M'  AND Item2 = 'ELC'
+ UNION
+ SELECT 'Oil (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'MR_GTRD(ENT).M'  AND Item2 = 'OIX'
+UNION
+ SELECT 'Natural Gas (t,a)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M' AND Item2 IN ('NGG', 'NGI')
+UNION
+ SELECT 'Coal (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'MR_GTRD(ENT).M'  AND Item2 = 'HCX'
+UNION
+ SELECT 'Diesel (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'MR_GTRD(ENT).M'  AND Item2 = 'DSX'
+UNION
+ SELECT 'Bio Gas (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'MR_GTRD(ENT).M'  AND Item2 = 'BNGX'
+ UNION
+ SELECT 'Bio Methanol (a)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M'  AND Item2 = 'BME'
+ UNION
+ SELECT 'Bio Ethanol (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M'  AND Item2 = 'BETX'
+UNION
+ SELECT 'Biofuel(Diesel) (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE  CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M'  AND Item2 = 'BBDX'
+UNION
+ SELECT 'Methanol (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M'  AND Item2 = 'BMTX'
+UNION 
+ SELECT 'Gasoline (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'MR_GTRD(ENT).M'  AND Item2 = 'GSX'
+ UNION
+ SELECT 'Green Hydrogen' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M' AND Item2 = 'HDG'
+UNION
+ SELECT 'Green Liquid' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)   AND Parameter = 'FUEL.ENC.M' AND Item2 = 'FTG'
+UNION 
+ SELECT 'Green Liquid (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'FUEL.ENC.M'  AND Item2 = 'FGX'
+UNION
+ SELECT 'Green Hydrogen (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000<TMPL> 
+ FROM tblTRESULTS 
+ WHERE   CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'MR_GTRD(ENT).M'  AND Item2 = 'HGX'
+UNION
+ SELECT 'Hydrogen (t)' AS Fuel,   <TMPL>AVG(T2000) AS 2000 <TMPL> 
+ FROM tblTRESULTS 
+ WHERE  CaseName = <SCENARIO> AND Region IN (<REGION>)    AND Parameter = 'MR_GTRD(ENT).M'  AND Item2 = 'HDX'
+
+
+
+
+
+
+
+--- 31. Detailed Fuels in T1 and T3
+    
+   splitted because too many categories
+    
+     SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+     FROM (SELECT *, 
+       SWITCH(
+        Item1 = 'BL12', 	'Bio-Syngas',              
+        Item1 = 'BL13', 	'Natural Gas',             
+        Item1 IN ('BL14', 'BL18'), 'Bio-Ethanol',  
+        Item1 IN ('BL15', 'BL19'), 'Bio-Methanol', 
+        Item1 IN ('BL16', 'BL20'), 'Methanol',     
+        Item1 IN ('BL29'), 	'Green Liquid',         
+        Item1 = 'BL17', 	'Gasoline',                
+        Item1 = 'BL21', 	'Diesel(+Fossil-FT)',      
+        Item1 = 'BL22', 	'Biofuel(Diesel)',         
+        Item1 = 'BL25', 	'FT-Diesel',               
+        TRUE, 'dummy1') AS Fuel                     
+      FROM tblTRESULTS                        
+      WHERE CaseName = <SCENARIO>     
+        AND Parameter = 'ACTIVITY.L'          
+        AND Region IN (<REGION>)      
+        AND ( Item1 IN ('BL12', 'BL13', 'BL14', 'BL15', 'BL16', 'BL17', 'BL18', 'BL19', 'BL20', 'BL21', 'BL22') 
+           OR Item1 IN ('BL25', 'BL29')) 
+     ) GROUP BY Fuel
+UNION     
+     SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+     FROM 
+     (SELECT *, 
+       SWITCH(
+         Item1 = 'BL07', 'Bio-FT-Jetfuel',
+        Item1 = 'BL24', 'FT-Jetfuel', 
+        Item1 = 'BL08', 'Jetfuel(+Fossil-FT)', 
+        Item1 = 'BL09', 'Jetfuel', 
+        Item1 = 'BL31', 'Green Jetfuel',             
+        TRUE, 'dummy2') AS Fuel                     
+      FROM tblTRESULTS                        
+      WHERE CaseName = <SCENARIO>     
+        AND Parameter = 'ACTIVITY.L'          
+        AND Region IN (<REGION>)      
+        AND Item1 IN ('BL07', 'BL24', 'BL08', 'BL09', 'BL31') 
+     ) GROUP BY Fuel
+UNION
+     SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+     FROM 
+     (SELECT *, 
+       IIF(Item2 = 'HDN', 'Hydrogen',     
+       IIF(Item2 = 'ELC', 'Electricity',  
+         'Other (Coal)')) AS Fuel         
+      FROM tblTRESULTS                    
+      WHERE CaseName = <SCENARIO> 
+        AND Parameter = 'FUELC_ENT_DM'    
+        AND Item3 IN ('T1','T3')          
+        AND Region IN (<REGION>)  
+        AND Item2 IN ('HDN', 'ELC', 'HCT') 
+     ) GROUP BY Fuel
+
+       
+       
+
+--- 32. Technologies in T1 and T3
+ 
+ SELECT Technology, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+  IIF(Item1 = 'T11', 'Coal',         
+  IIF(Item1 = 'T12', 'Oil',          
+  IIF(Item1 = 'T13', 'Gas',          
+  IIF(Item1 = 'T14', 'Electricity',  
+  IIF(Item1 = 'T16', 'Alcohol FC',   
+  IIF(Item1 = 'T17', 'Hydrogen FC',  
+  IIF(Item1 = 'T18', 'Hydrogen ICE', 
+  IIF(Item1 = 'T31', 'Aviation',     
+  IIF(Item1 = 'T32', 'Aviation Adv.', Item1 ))))))))) AS Technology 
+ FROM tblTRESULTS 
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'USENRG.TRN_DMD_DM' 
+   AND Item2 IN ('T1','T3') 
+   AND Region IN (<REGION>) 
+) GROUP BY Technology
+
+
+
+
+--- 33. CO2-Emissions from Cars
+
+  SELECT Region, <TMPL> 44/12*0.001*SUM(T2000) AS 2000 <TMPL>  
+  FROM tblTRESULTS                     
+  WHERE CaseName  = <SCENARIO> 
+    AND Parameter = 'EMISSION.L'       
+    AND Item2     = 'CARCO2'           
+  GROUP BY Region                      
+ 
+
+
+
+--- 34. Detailed Fuels in Transport
+
+     
+  splitted because too large:
+
+     SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+      FROM 
+     (SELECT *, 
+      SWITCH ( 
+       Item1 IN ('BL02', 'BL14', 'BL18'), 'Bio-Ethanol',  
+       Item1 IN ('BL03', 'BL15', 'BL19'), 'Bio-Methanol', 
+       Item1 IN ('BL04', 'BL16', 'BL20'), 'Methanol',     
+       Item1 IN ('BL05', 'BL21'),	'Diesel(+Fossil-FT)',   
+       Item1 IN ('BL06', 'BL22'), 	'Biofuel(Diesel)',      
+       Item1 IN ('BL23', 'BL25'), 	'H2-FT-Diesel',         
+       Item1 IN ('BL29', 'BL30', 'BL32'), 'Green-Liquid', 
+       Item1 IN ('BL10', 'BL12'), 	'Bio-Syngas',           
+       Item1 IN ('BL11', 'BL13'), 	'Natural Gas',          
+       TRUE,  'dummy1') AS Fuel      
+      FROM tblTRESULTS                     
+      WHERE CaseName = <SCENARIO>  
+        AND Parameter = 'ACTIVITY.L'       
+        AND Region IN (<REGION>)   
+        AND ( Item1 IN ('BL02', 'BL03', 'BL04', 'BL05', 'BL06', 'BL23', 'BL29', 'BL10', 'BL11', 'BL14', 'BL15') 
+           OR Item1 IN ('BL16', 'BL21', 'BL22', 'BL25', 'BL30', 'BL12', 'BL13') ) 
+     ) GROUP BY Fuel 
+ UNION   
+     SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+      FROM 
+     (SELECT *, 
+      SWITCH ( 
+       Item1 IN ('BL01', 'BL17'), 'Gasoline',             
+       Item1 IN ('BL08', 'BL09'), 'Jetfuels(+Fossil-FT)', 
+       Item1 IN ('BL07'),         'Bio-Jetfuels',         
+       Item1 IN ('BL24'),         'H2-FT-Jetfuels',       
+       Item1 IN ('BL31'),         'SAF-Jetfuels',         
+       TRUE,  'dummy2')  AS Fuel      
+      FROM tblTRESULTS                     
+      WHERE CaseName = <SCENARIO>  
+        AND Parameter = 'ACTIVITY.L'       
+        AND Region IN (<REGION>)   
+        AND Item1 IN ('BL01', 'BL17', 'BL08', 'BL09', 'BL07', 'BL24', 'BL31') 
+     ) GROUP BY Fuel 
+UNION     
+     SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+      FROM 
+     (SELECT *, 
+       IIF(Item2 = 'HDN', 'Hydrogen',      
+       IIF(Item2 = 'ELC', 'Electricity',   
+         'Other (Coal)')) AS Fuel          
+      FROM tblTRESULTS                     
+      WHERE CaseName = <SCENARIO>  
+        AND Parameter = 'FUELC_ENT_DM'     
+        AND Item3 IN ('T1','T2','T3','T4') 
+        AND Region IN (<REGION>)   
+        AND Item2 IN ('HDN', 'ELC', 'HCT') 
+     ) GROUP BY Fuel               
+
+
+
+
+
+--- 35. Technology Mix for all Cars, Diesel split, by cardinality
+
+ SELECT Technology,   <TMPL>SUM(T2000) AS 2000<TMPL>  
+ FROM (SELECT *, 
+<TMPL>T2000 * 1 / SWITCH(  
+     	Region = 'ASIAPAC', 15.6,
+	Region = 'AUSNZL', 13.5,
+	Region = 'BRAZIL', 15.6,
+	Region= 'CANMEX' , 14.2,
+	Region IN('RUSSIA', 'CENASIA'), 13.2,
+	Region = 'CHINAREG', 15.2,
+	Region = 'EEUR', 12.4,
+        Region= 'INDIA', 14.7,
+	Region= 'JPKRTW', 8.5,
+	Region = 'LAC', 15.6,
+	Region = 'MENA', 18.2,
+	Region = 'SSAFRICA', 12.4,
+	Region = 'USA', 18,
+	TRUE, 14
+	)
+AS T2000 <TMPL>, 
+  IIF(Item1 IN ('T2GI', 'T2GA', 'T4GI', 'T4GA'), 'Gasoline Type ICEV',     
+  IIF(Item1 IN ('T2DI', 'T2DA'), 'Diesel Type ICEV',              
+  IIF(Item1 IN ('T2DH'), 'Diesel Type Hybrid',                    
+  IIF(Item1 IN ('T2GH', 'T4GH'),         'Gasoline Type Hybrid',  
+  IIF(Item1 IN ('T2EH', 'T4EH'),         'Liquid Fuel Plug-in',   
+  IIF(Item1 = 'T2CI',                    'Gas Fuel ICEV',         
+  IIF(Item1 = 'T2CH',                    'Gas Fuel Hybrid',       
+  IIF(Item1 = 'T2HH',                    'Hydrogen Hybrid',       
+  IIF(Item1 = 'T2GF',                    'Gasoline Fuel Cell',    
+  IIF(Item1 IN ('T2HF','T4HF'),          'Hydrogen Fuel Cell',    
+  IIF(Item1 IN ('T2EB','T4EB'),          'Electric Vehicle'  , Item1))))))))))) AS Technology 
+ FROM tblTRESULTS 
+ WHERE CaseName  = <SCENARIO> 
+   AND Parameter = 'USENRG.TRN_DMD_DM' 
+   AND Item2 IN ('T2','T4') 
+   AND Region IN (<REGION>) 
+) GROUP BY Technology
+              
+
+              
+              
+          
+
+
+
+---'36. GDP market scenario
+
+SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
+FROM (
+  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
+  FROM tblTRESULTS
+ ) 
+
+
+
+
+--- '37. GDP state scenario
+              
+SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
+FROM (
+  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
+  FROM tblTRESULTS
+ ) 
+
+
+
+
+
+--- 38. Population Jazz scenario
+
+SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
+FROM (
+  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
+  FROM tblTRESULTS
+ ) 
+
+
+
+
+
+
+
+--- 39. Population Symphony scenario
+              
+SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
+FROM (
+  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
+  FROM tblTRESULTS
+ ) 
+
+
+
+--- 40. Fuels in Industry Thermal
+
+ SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+       IIF(Item2 IN ('DST'),                 'Oil Type',      
+       IIF(Item2 IN ('ALT', 'BIP'),          'Bio, Alc',      
+       IIF(Item2 IN ('FCH', 'HDN'),          'Hydrogen',      
+       IIF(Item2 IN ('ELC'),                 'Electricity',   
+       IIF(Item2 IN ('NGT'),                 'Gas Type',      
+       IIF(Item2 IN ('HCT'),                 'Coal',          
+       IIF(Item2 IN ('LTH'),                 'Heat',          
+       IIF(Item2 IN ('SOT'),                 'Solar',         
+       'Other')))))))) AS Fuel              
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+        AND Item3 IN ('I1')                  
+        AND Item2 NOT LIKE 'ETL%'            
+        AND CaseName = <SCENARIO>    
+        AND Region IN (<REGION>)     
+  ) GROUP BY Fuel                 
+
+
+
+
+---  41. Fuels in Industry Specific
+
+ SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM  (SELECT *, 
+       IIF(Item2 IN ('DST'),                 'Oil Type',    
+       IIF(Item2 IN ('ALT'),                 'Alc',         
+       IIF(Item2 IN ('HDN'),                 'Hydrogen',    
+       IIF(Item2 IN ('ELC'),                 'Electricity', 
+       'Other')))) AS Fuel                  
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('I2')                  
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+  ) GROUP BY Fuel                 
+
+
+
+
+---  42. Fuels in Feedstocks
+ 
+ SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+       IIF(Item2 IN ('DSF'),                 'Oil Type',  
+       IIF(Item2 IN ('ALF'),                 'Alc',       
+       IIF(Item2 IN ('NGF'),                 'Gas Type',  
+       IIF(Item2 IN ('HCO','HCF'),           'Coal',      
+       'Other')))) AS Fuel                  
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+        AND Item3 IN ('I3')                  
+        AND Item2 NOT LIKE 'ETL%'            
+        AND CaseName = <SCENARIO>    
+        AND Region IN (<REGION>)     
+  ) GROUP BY Fuel                 
+
+
+
+--- 43. Fuels in Other (Residental  Commercial) Sector Thermal (includes non-commercial bio)
+
+ SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *, 
+       IIF(Item3 IN ('R3'),                  'Bio noncomm.',  
+       IIF(Item2 IN ('DST'),                 'Oil Type',      
+       IIF(Item2 IN ('ALT', 'BIP'),          'Bio, Alc',      
+       IIF(Item2 IN ('FCR', 'HDN'),          'Hydrogen',      
+       IIF(Item2 IN ('ELC'),                 'Electricity',   
+       IIF(Item2 IN ('NGT'),                 'Gas Type',      
+       IIF(Item2 IN ('HCT'),                 'Coal',          
+       IIF(Item2 IN ('LTH'),                 'Heat',          
+       IIF(Item2 IN ('SOT'),                 'Solar',         
+       'Other'))))))))) AS Fuel              
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+        AND Item3 IN ('R2','R3')             
+        AND Item2 NOT LIKE 'ETL%'            
+        AND CaseName = <SCENARIO>    
+        AND Region IN (<REGION>)     
+ ) GROUP BY Fuel                 
+
+
+
+--- 44. Fuels in Other (Residental  Commercial) Sector Specific
+
+  SELECT Fuel, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+  FROM (SELECT *, 
+       IIF(Item2 IN ('HDN'),                 'Hydrogen',    
+       IIF(Item2 IN ('ELC'),                 'Electricity', 
+       'Other')) AS Fuel                  
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('R1')                  
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+      ) GROUP BY Fuel                 
+
+
+
+--- 45. Gas and Coal Electricity Production
+
+SELECT [Primary Energy], <TMPL> 1/3.6*SUM(T2000) AS 2000 <TMPL>
+FROM (SELECT *, 
+    SWITCH(
+	Item1 IN ('E01', 'ES1'), 'Coal Conv',
+        Item1 IN ('E02', 'EC2'), 'Coal Adv' ,
+        Item1 IN  ('EIG', 'EIC'), 'Coal IGCC',
+        Item1 IN  ('E6C', 'H01SF'), 'Coal Cogen',
+ 	Item1 IN ('E11', 'E1C'),  'Gas CC',
+ 	Item1 IN ('E12'), 'Gas Turbine' ,
+ 	Item1 IN  ('E13'), 'Gas (E13)',
+	Item1 IN  ('E15','E6A'), 'Gas Cogen FC'  
+         ) AS [Primary Energy]
+  FROM tblTRESULTS 
+  WHERE CaseName = <SCENARIO>
+    AND Parameter IN ('OUTELC.CEN','OUTELC.CPD','OUTELC.DCN') 
+    AND Region IN (<REGION>) 
+ ) GROUP BY [Primary Energy]
+       
+
+
+
+--- 46. Oil Production by Category
+
+ SELECT Category, <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL>  
+ FROM 
+ (SELECT *, 
+   IIF(Item1 IN ('S13'), 'Category I',    
+   IIF(Item1 IN ('S14'), 'Category II',   
+   IIF(Item1 IN ('S15'), 'Category III',  
+   IIF(Item1 IN ('S16'), 'Category IV',   
+   IIF(Item1 IN ('S17'), 'Category V+VI', 
+   'Other'))))) AS Category  
+  FROM tblTRESULTS                                     
+  WHERE Parameter = 'OUTOTH.PRC.LIQ'                   
+   AND Item1 IN ('S13','S14','S15','S16','S17')        
+   AND CaseName  = <SCENARIO>                  
+   AND Region IN (<REGION>)                    
+ ) GROUP BY Category 
+
+
+
+--- 47. Gas Production by Category
+
+ SELECT Category, <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL>  
+ FROM 
+ (SELECT *, 
+   IIF(Item1 IN ('S18'), 'Category I',   
+   IIF(Item1 IN ('S19'), 'Category II',  
+   IIF(Item1 IN ('S1A'), 'Category III', 
+   IIF(Item1 IN ('S1B'), 'Category IV',  
+   IIF(Item1 IN ('S1C'), 'Category V',   
+   IIF(Item1 IN ('S1D'), 'Category VI',  
+   'Other')))))) AS Category  
+  FROM tblTRESULTS                                     
+  WHERE Parameter = 'OUTOTH.PRC.GAS'                   
+   AND Item1 IN ('S18','S19','S1A','S1B','S1C','S1D')  
+   AND CaseName  = <SCENARIO>                  
+   AND Region IN (<REGION>)                    
+ ) GROUP BY Category 
+
+
+
+--- 48. Net Import/Export by Region
+
+ SELECT Region, <TMPL> SUM(IIF(Item1 LIKE 'EXP%' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_TSEP.L', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_TSEPELC.L')
+   AND CaseName  = <SCENARIO> 
+   AND Item2 NOT LIKE 'ETL%' 
+   AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 49. Trade Volume by Region
+
+ SELECT Region, <TMPL> 0.001*SUM(T2000) AS 2000 <TMPL>  
+  FROM tblTRESULTS                 
+  WHERE Parameter IN ('R_TSEP.L','R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_TSEPELC.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 NOT LIKE 'ETL%' 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 50. Gas Depletion (SCENARIO!, 10 years only)
+
+SELECT * FROM ( 
+SELECT Technology,   <TMPL>0.001 * SUM(T2000) AS 2000 <TMPL>  
+ FROM ( 
+  SELECT Technology,                                            
+   y0 AS T2010,                                                 
+   y0 - 10*( 3/4*y1+1/4*y2                           ) AS T2020,
+   y0 - 10*(                 y1+y2                   ) AS T2030,
+   y0 - 10*( 3/4*y3+1/4*y4  +y1+y2                   ) AS T2040,
+   y0 - 10*(                 y1+y2+y3+y4             ) AS T2050,
+   y0 - 10*( 3/4*y5+1/4*y6  +y1+y2+y3+y4             ) AS T2060,
+   y0 - 10*(                 y1+y2+y3+y4+y5+y6       ) AS T2070,
+   y0 - 10*( 3/4*y7+1/4*y8  +y1+y2+y3+y4+y5+y6       ) AS T2080,
+   y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2090,
+   y0 - 10*( 3/4*y9+1/4*y10 +y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2100,
+   y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8+y9+y10 ) AS T2110 
+    FROM ( 
+     SELECT 
+  	IIF(t1.Item1 = 'MINNG11', 'Category I',   
+  	IIF(t1.Item1 = 'MINNG21', 'Category II',  
+  	IIF(t1.Item1 = 'MINNG31', 'Category III', 
+  	IIF(t1.Item1 = 'MINNG41', 'Category IV',  
+  	IIF(t1.Item1 = 'MINNG51', 'Category V',   
+  	IIF(t1.Item1 = 'MINNG61', 'Category VI', t1.Item1 )))))) AS Technology, 
+   	t1.Value AS y0,                          
+	IIF(2020 < 2020,   IIF(ISNULL(t2.T2010),0,t2.T2010),  0)   AS y1,  
+  	IIF(ISNULL(t2.T2020),0,t2.T2020) AS y2,  
+  	IIF(ISNULL(t2.T2030),0,t2.T2030) AS y3,  
+  	IIF(ISNULL(t2.T2040),0,t2.T2040) AS y4,  
+  	IIF(ISNULL(t2.T2050),0,t2.T2050) AS y5,  
+  	IIF(ISNULL(t2.T2060),0,t2.T2060) AS y6,  
+  	IIF(ISNULL(t2.T2070),0,t2.T2070) AS y7,  
+  	IIF(ISNULL(t2.T2080),0,t2.T2080) AS y8,  
+  	IIF(ISNULL(t2.T2090),0,t2.T2090) AS y9,  
+  	IIF(ISNULL(t2.T2100),0,t2.T2100) AS y10, 
+  	IIF(ISNULL(t2.T2110),0,t2.T2110) AS y11  
+    FROM tblTIDDATA AS t1                            
+    LEFT JOIN                                        
+    (SELECT * FROM tblTRESULTS                       
+       WHERE Parameter = 'RESOURCE.L'                 
+         AND CaseName  = <SCENARIO> ) AS t2   
+     ON t1.Item1 = t2.Item1                           
+      AND t1.Region = t2.Region                      
+     WHERE t1.Parameter = 'CUM'                       
+     AND t1.ScenarioName = <PARAM1>    
+     AND t1.Region IN (<REGION>)             
+     AND t1.Item1 LIKE 'MINNG%' 
+   )  ) 
+    GROUP BY Technology ) 
+      WHERE Technology <> 'Category IV' 
+
+
+
+
+--- 51. TFC
+
+SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>  
+              FROM (  
+ SELECT *, 
+       IIF(Item3 IN ('R3'),                                'Bio noncomm.',  
+       IIF(Item2 IN ('GLR','DLR','DSF','DST','OPR'),       'Oil Type',      
+       IIF(Item2 IN ('ALR','ALT','ALF','BIP'),             'Bio, Alc',      
+       IIF(Item2 IN ('FCR','FCH','HDN'),                   'Hydrogen',      
+       IIF(Item2 IN ('ELC'),                               'Electricity',   
+       IIF(Item2 IN ('NGF','NGT','CGR','CGR1'),            'Gas',           
+       IIF(Item2 IN ('HCO','HCT','HCF'),                   'Coal',          
+       IIF(Item2 IN ('LTH'),                               'Heat',          
+       IIF(Item2 IN ('SOT'),                               'Solar',         
+       'Other (non transport)'))))))))) AS Fuel              
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item2 NOT LIKE 'ETL%'            
+       AND Item3 NOT LIKE 'T%'              
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)      
+UNION   
+  SELECT *, 
+       IIF(Item1 IN ('BL01', 'BL17'), 'Oil Type',                
+       IIF(Item1 IN ('BL08', 'BL09', 'BL24', 'BL31'), 'Oil Type',
+       IIF(Item1 IN ('BL07'),         'Bio, Alc',                
+       IIF(Item1 IN ('BL02', 'BL14', 'BL18'), 'Bio, Alc',        
+       IIF(Item1 IN ('BL03', 'BL15', 'BL19'), 'Bio, Alc',        
+       IIF(Item1 IN ('BL04', 'BL16', 'BL20'), 'Oil Type',        
+       IIF(Item1 IN ('BL05', 'BL21'), 'Oil Type',                
+       IIF(Item1 IN ('BL06', 'BL22'), 'Bio, Alc',                
+       IIF(Item1 IN ('BL10', 'BL12'), 'Bio, Alc',                
+       IIF(Item1 IN ('BL11', 'BL13'), 'Gas',                     
+         'Other (transport)')))))))))) AS Fuel          
+      FROM tblTRESULTS                     
+      WHERE CaseName = <SCENARIO>  
+        AND Parameter = 'ACTIVITY.L'       
+        AND Region IN (<REGION>)   
+        AND Item1 LIKE 'BL%'           
+UNION   
+  SELECT *, 
+       IIF(Item2 = 'HDN', 'Hydrogen',      
+       IIF(Item2 = 'ELC', 'Electricity',   
+         'Coal'))        AS Fuel          
+      FROM tblTRESULTS                     
+      WHERE CaseName = <SCENARIO>  
+        AND Parameter = 'FUELC_ENT_DM'     
+        AND Item3 IN ('T1','T2','T3','T4') 
+        AND Region IN (<REGION>)   
+        AND Item2 IN ('HDN', 'ELC', 'HCT')  
+                   )
+              GROUP BY Fuel
+              
+
+
+
+--- 52. Electricity Capacity
+
+SELECT * FROM 
+(SELECT Technology, <TMPL> SUM(T2000) AS 2000 <TMPL>  
+ FROM (SELECT *,
+       SWITCH(
+         Item1 IN ('E01','E02','EIG','ES1','H01','E6C'), 'Coal',
+         Item1 IN ('EC2','EIC','H01SF'), 	   'Coal (with CCS)',
+         Item1 IN ('E70'),   			   'Oil',
+         Item1 IN ('E11','E12','E13','E15','E6A'), 'Gas', 
+         Item1 IN ('E1C'), 			   'Gas (with CCS)',
+         Item1 IN ('E21','E22'),  		   'Nuclear', 
+         Item1 IN ('E31'), 			   'Hydro', 
+         Item1 IN ('E41','E41B','E42'), 	   'Solar',
+         Item1 IN ('E61','E62'),		   'Wind',
+         Item1 IN ('BW2','BW5','BWA','E80','BB1','E82'),'Biomass',  
+         Item1 IN ('E83'),			   'Biomass (with CCS)',
+         Item1 IN ('E81'),			   'Geothermal',  
+         Item1 IN ('EH2','EH3'),		   'Hydrogen CoGen',
+         TRUE, 'dummy' 
+        ) AS Technology
+       FROM tblTRESULTS 
+       WHERE CaseName = <SCENARIO>
+         AND Parameter = 'CAPACITY.L' 
+         AND Region IN (<REGION>) 
+  ) GROUP BY Technology) WHERE Technology <> 'dummy'
+         
+
+
+--- 53. Net Coal-Type Import/Export by Region
+
+ SELECT Region,   <TMPL>SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000<TMPL>  
+  FROM tblTRESULTS                 
+  WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('HCX', 'BMTX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 54. Net Gas Import/Export by Region
+
+ SELECT Region,   <TMPL>SUM(IIF(Item1 LIKE 'EXP%' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000<TMPL>  
+  FROM tblTRESULTS                 
+  WHERE ( 
+  (Item2 = 'LNG' AND Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')) 
+  OR Parameter = 'R_TSEP.L') 
+  AND CaseName  = <SCENARIO> 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 55. Net Oil-Type Import/Export by Region
+
+ SELECT Region,   <TMPL>SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000<TMPL>  
+  FROM tblTRESULTS                 
+  WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('OIX','DSX','GSX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 56. Biofuel Import/Export by Region
+ 
+ SELECT Region,   <TMPL>SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000<TMPL>  
+  FROM tblTRESULTS                 
+  WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('BBDX','BETX','BNGX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 57. TFC by sector
+
+     SELECT Sector,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+      FROM 
+     (SELECT *, 
+       IIF(Item3 IN ('R3'),                 'Bio noncomm.',        
+       IIF(Item3 IN ('R2'),                 'Res./comm. thermal',  
+       IIF(Item3 IN ('R1'),                 'Res./comm. specific', 
+       IIF(Item3 IN ('I1'),                 'Industry thermal',    
+       IIF(Item3 IN ('I2'),                 'Industry specific',   
+       IIF(Item3 IN ('I3'),                 'Non-energy',          
+       IIF(Item3 IN ('T1'),                 'Other surface trns.', 
+       IIF(Item3 IN ('T2','T4'),            'Personal car trns.',  
+       IIF(Item3 IN ('T3'),                 'Aviation',            
+       'Other'))))))))) AS Sector           
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+      ) GROUP BY Sector                     
+
+
+
+
+--- 58. TFC by region
+
+     SELECT Region,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+      GROUP BY Region                       
+
+
+
+
+--- 59. TFC Industrial by region
+ 
+     SELECT Region,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('I1','I2','I3')       
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+      GROUP BY Region                       
+
+
+
+--- 60. TFC Res./Comm. by region
+
+     SELECT Region,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('R1','R2','R3')       
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+      GROUP BY Region                       
+
+
+
+--- 61. Electricity in TFC by region
+
+     SELECT Region,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item2 = 'ELC'                   
+       AND CaseName = <SCENARIO>   
+      GROUP BY Region                      
+
+
+
+--- 62. TFC Feedstocks by region
+ 
+     SELECT Region,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item2 NOT LIKE 'ETL%'           
+       AND Item3 = 'I3'                    
+       AND CaseName = <SCENARIO>   
+      GROUP BY Region                      
+
+
+--- 63. Fuels in Residential/Commercial total
+
+ SELECT Fuel,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+ FROM 
+     (SELECT *, 
+       IIF(Item3 IN ('R3'),                  'Bio noncomm.',  
+       IIF(Item2 IN ('DST'),                 'Oil Type',      
+       IIF(Item2 IN ('ALT', 'BIP'),          'Bio, Alc',      
+       IIF(Item2 IN ('FCR', 'HDN'),          'Hydrogen',      
+       IIF(Item2 IN ('ELC'),                 'Electricity',   
+       IIF(Item2 IN ('NGT'),                 'Gas Type',      
+       IIF(Item2 IN ('HCT'),                 'Coal',          
+       IIF(Item2 IN ('LTH'),                 'Heat',          
+       IIF(Item2 IN ('SOT'),                 'Solar',         
+       'Other'))))))))) AS Fuel              
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('R1', 'R2','R3')       
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+   ) GROUP BY Fuel                 
+     
+
+
+
+--- 64. Fuels in Industry Total
+
+ SELECT Fuel,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
+ FROM 
+     (SELECT *, 
+       IIF(Item2 IN ('DST'),                 'Oil Type',      
+       IIF(Item2 IN ('ALT', 'BIP'),          'Bio, Alc',      
+       IIF(Item2 IN ('FCH', 'HDN'),          'Hydrogen',      
+       IIF(Item2 IN ('ELC'),                 'Electricity',   
+       IIF(Item2 IN ('NGT'),                 'Gas Type',      
+       IIF(Item2 IN ('HCT'),                 'Coal',          
+       IIF(Item2 IN ('LTH'),                 'Heat',          
+       IIF(Item2 IN ('SOT'),                 'Solar',         
+       'Other')))))))) AS Fuel              
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('I1','I2')                  
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+  ) GROUP BY Fuel                 
+
+
+
+
+
+--- 65. Fuels in Industry and Feedstocks Total
+
+ SELECT Fuel, <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL>  
+ FROM 
+     (SELECT *, 
+       IIF(Item2 IN ('DST','DSF'),           'Oil Type',      
+       IIF(Item2 IN ('ALT', 'BIP','ALF'),    'Bio, Alc',      
+       IIF(Item2 IN ('FCH', 'HDN'),          'Hydrogen',      
+       IIF(Item2 IN ('ELC'),                 'Electricity',   
+       IIF(Item2 IN ('NGT','NGF'),           'Gas Type',      
+       IIF(Item2 IN ('HCT','HCO','HCF'),     'Coal',          
+       IIF(Item2 IN ('LTH'),                 'Heat',          
+       IIF(Item2 IN ('SOT'),                 'Solar',         
+       'Other')))))))) AS Fuel              
+       FROM tblTRESULTS                     
+       WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item3 IN ('I1','I2','I3')                  
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+  ) GROUP BY Fuel                 
+
+
+--- 66. Electricity in Residential/Commercial by region
+ 
+     SELECT Region, <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL>  
+      FROM tblTRESULTS                     
+      WHERE Parameter = 'FUELC_ENT_DM'     
+       AND Item2 = 'ELC'                   
+       AND Item3 IN ('R1','R2','R3')                  
+       AND CaseName = <SCENARIO>   
+      GROUP BY Region                      
+
+
+--- 67. Number of cars by region
+
+ SELECT Region,   <TMPL>1 * SUM(T2000) AS 2000<TMPL>  
+ FROM tblTRESULTS                     
+ WHERE Parameter = 'USENRG.TRN.DM'     
+   AND Item2 in ('T2','T4')            
+   AND CaseName = <SCENARIO>    
+ GROUP BY Region                       
+
+
+--- 68. Total Net imports by region
+
+ SELECT Region, <TMPL> SUM(IIF(Item1 LIKE 'EXP%' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_TSEP.L','R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_TSEPELC.L')
+   AND CaseName  = <SCENARIO> 
+   AND Item2 NOT LIKE 'ETL%' 
+   AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+--- 69. Fuels in Electricity Generation
+ 
+ SELECT Fuel, <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL>  
+ FROM 
+     (SELECT *, 
+       IIF(Item2 IN ('SOL','WIN','WIO'),          'Renewables',  
+       IIF(Item2 IN ('HYD'),                      'Hydro',      
+       IIF(Item2 IN ('BIP','BSTT','BWOT','BDWT'), 'Biomass',      
+       IIF(Item2 IN ('HDN'),                      'Hydrogen',      
+       IIF(Item2 IN ('URN'),                      'Nuclear',   
+       IIF(Item2 IN ('NGA'),                      'Gas',      
+       IIF(Item2 IN ('DST'),                      'Oil',          
+       IIF(Item2 IN ('HCT'),                      'Coal',          
+       'Other')))))))) AS Fuel              
+       FROM tblTRESULTS                     
+       WHERE Parameter IN ('FUELUSE.TCH','FUELUSEFEQ.TCH')  
+       AND Item1 IN ('E01','E02','EIG','ES1','H01','E6C','EC2','EIC','H01SF','E70',
+                     'E11','E12','E13','E15','E6A','E1C','E21','E22','E31','E41','E41B',
+                     'E42','E61','E62','BW2', 'BW5', 'BWA','E80','BB1','E82','E83','E81','EH2','EH3')       
+       AND Item2 NOT LIKE 'ETL%'            
+       AND CaseName = <SCENARIO>    
+       AND Region IN (<REGION>)     
+ ) GROUP BY Fuel                 
+  
+
+
+
+--- 70. Net LNG Import/Export by Region
+
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Item2 = 'LNG' 
+  AND Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L') 
+  AND CaseName  = <SCENARIO> 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 71. Net Hydrogen Import/Export by Region
+ 
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('HDX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 72. Net Diesel-Import/Export by Region
+
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('DSX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 73. Net Gasoline-Import/Export by Region
+
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('GSX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 74. Biodiesel Import/Export by Region
+
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('BBDX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 75. Bio-Ethanol Import/Export by Region
+
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('BETX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 76. Biogas Import/Export by Region
+ 
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('BNGX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 77. Net FT-Hydrogen-Import/Export by Region
+ 
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,IIF(Parameter = 'R_GTRD(ENT)imp.L',0.001, 0))*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_GTRD(ENT)exp.M')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('FHX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 78. Net FT-Green-Import/Export by Region
+
+'get also the marginal, because there may be cases where exp.L and imp.L are all empty; marginal rows are set to zero
+ 
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,IIF(Parameter = 'R_GTRD(ENT)imp.L',0.001, 0))*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_GTRD(ENT)exp.M')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('FGX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+--- 79. Net Green Hydrogen Import/Export by Region
+
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('HGX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 80. Hydrogen Import/Export by Region
+
+'get also the marginal, because there may be cases where exp.L and imp.L are all empty; marginal rows are set to zero
+
+ SELECT Region, <TMPL> SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,IIF(Parameter = 'R_GTRD(ENT)imp.L',0.001, 0))*T2000) AS 2000 <TMPL>  
+ FROM tblTRESULTS                 
+ WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_GTRD(ENT)exp.M')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('HDX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+--- 81. Net Methanol-Import/Export by Region
+
+'get also the marginal, because there may be cases where exp.L and imp.L are all empty; marginal rows are set to zero
+
+ SELECT Region,   <TMPL>SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-0.001,IIF(Parameter = 'R_GTRD(ENT)imp.L',0.001, 0))*T2000) AS 2000<TMPL>  
+  FROM tblTRESULTS                 
+  WHERE Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_GTRD(ENT)exp.M')
+  AND CaseName  = <SCENARIO> 
+  AND Item2 IN ('BMTX') 
+  AND Region <> 'REGION0' 
+ GROUP BY Region 
+
+
+
+
+
