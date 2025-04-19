@@ -1,8 +1,15 @@
 
-ATTENTION: DO not use double multipliation in ACCESS queries: 3*0.001*SUM(). This will result in wrong results
+Here can be any text
+
+- The SQL statements are split by the three dashes (do not use them in comments) 
+- The text after the three dashes is the title put into the SELECT sheet (a numbering is not important, just for visually finding a query)
+- The text after the title row until SELECT or TRANSFORM is ignored for the SQL query. Can be used as comment. Note: SQL cannot have comments in MS Access/Excel
+- After the SQL statement, no text is allowed until the next three-dashes or end of file
 
 
 --- 1. Total Primary Energy Supply by Type
+
+- Here can by any text
 
   SELECT 'Biomass' AS Energy, <TMPL>0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-1,1)*T2000) AS 2000<TMPL>  
   FROM tblTRESULTS 
@@ -10,7 +17,7 @@ ATTENTION: DO not use double multipliation in ACCESS queries: 3*0.001*SUM(). Thi
     AND Parameter IN ('SUPFOS', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')
     AND Region IN (<REGION>) 
     AND Item2 IN   ('BDW', 'BOC', 'BST', 'BSU', 'BWO', 'BBDX', 'BETX', 'BNGX')
-    AND Item2 NOT LIKE 'ETL%' 
+    AND Item2 NOT LIKE 'ETL*' 
 UNION 
    SELECT 'Oil' AS Energy,  <TMPL>0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L',-1,1)*T2000) AS 2000<TMPL>  
    FROM tblTRESULTS 
@@ -66,7 +73,7 @@ UNION
        AND Item1 IN ('E21','E22') 
        AND Region IN (<REGION>) 
 UNION
-     SELECT 'Electricity' AS Energy, <TMPL> 0.001*SUM(IIF(Item1 LIKE 'EXP%',-1,1)*T2000) AS 2000 <TMPL>  
+     SELECT 'Electricity' AS Energy, <TMPL> 0.001*SUM(IIF(Item1 LIKE 'EXP*',-1,1)*T2000) AS 2000 <TMPL>  
      FROM tblTRESULTS 
      WHERE CaseName = <SCENARIO> 
       AND Parameter = 'R_TSEPELC.L' 
@@ -90,12 +97,10 @@ UNION
 
 
 
---- 2. Total Primary Energy Supply by Region Multiply electricity by 3
+--- 2. Total Primary Energy Supply by Region (Electricity multiplied by 3)
 
 
-
-SQLquery2 = 
- SELECT Region, <TMPL> 0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L' OR (Parameter='R_TSEPELC.L' AND Item1 LIKE 'EXP%'),-1, IIF(Parameter = 'OUTPUT.ELC',3,1))*T2000) AS 2000 <TMPL>  
+SELECT Region, <TMPL> 0.001*SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L' OR (Parameter='R_TSEPELC.L' AND Item1 LIKE 'EXP*'),-1, IIF(Parameter = 'OUTPUT.ELC',3,1))*T2000) AS 2000 <TMPL>  
  FROM tblTRESULTS 
  WHERE CaseName = <SCENARIO>
    AND Region <> 'REGION0' 
@@ -275,7 +280,7 @@ UNION
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('T1','T2', 'T3', 'T4') 
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
   ) GROUP BY Technology                 
@@ -359,16 +364,22 @@ UNION
 
 
 
---- 13. New Long-Range Cars (FACTOR!)
+--- 13. New Long-Range Cars (<PARAM2>)
 
 SELECT * FROM       
-(SELECT Technology,   <TMPL>$*SUM(T2000) AS 2000 <FAC> 1 / 1.5 <TMPL>  
+(SELECT Technology,   <TMPL>$*SUM(T2000) AS 2000 <FAC> 1 / <PARAM2> <TMPL>  
  FROM (SELECT 
-<TMPL>T2000 * 
- IIF(Region IN ('AUSNZL'),1/135, IIF(Region IN ('ASIAPAC','LAC','BRAZIL'),1/156, IIF(Region IN ('CANMEX'),1/142, 
- IIF(Region IN ('CENASIA','RUSSIA'),1/132, IIF(Region IN ('CHINAREG'),1/152, IIF(Region IN ('EEUR','SSAFRICA'),1/124, 
- IIF(Region IN ('INDIA'),1/147, IIF(Region IN ('JPKRTW'),1/85,
- IIF(Region IN ('USA','MENA'),1/182,1/140))))))))) AS T2000<TMPL>  , 
+<TMPL> T2000 * 
+ IIF(Region IN ('AUSNZL'), 1/135,
+ IIF(Region IN ('ASIAPAC','LAC','BRAZIL'), 1/156,
+ IIF(Region IN ('CANMEX'), 1/142, 
+ IIF(Region IN ('CENASIA','RUSSIA'), 1/132, 
+ IIF(Region IN ('CHINAREG'), 1/152,
+ IIF(Region IN ('EEUR','SSAFRICA'), 1/124, 
+ IIF(Region IN ('INDIA'), 1/147, 
+ IIF(Region IN ('JPKRTW'), 1/85,
+ IIF(Region IN ('USA','MENA'), 1/182,
+   1/140))))))))) AS T2000 <TMPL>, 
   IIF(Item1 IN ( 'T2GI', 'T2GA', 'T2DI', 'T2DA'), 'Liquid Fuel ICEV', 
   IIF(Item1 IN ('T2GH', 'T2DH'), 'Liquid Fuel Hybrid',   
   IIF(Item1 IN ('T2EH'),         'Liquid Fuel Plug-in',  
@@ -386,10 +397,10 @@ SELECT * FROM
 
 
 
---- 14. New Short-Range Cars (FACTOR!)
+--- 14. New Short-Range Cars (<PARAM2>)
 
 SELECT * FROM       
-(SELECT Technology, <TMPL> $ * SUM(T2000) AS 2000 <FAC> 1 / 1.5 <TMPL>  
+(SELECT Technology, <TMPL> $ * SUM(T2000) AS 2000 <FAC> 1 / <PARAM2> <TMPL>  
  FROM (SELECT   <TMPL>1/150*T2000 AS T2000<TMPL>  , 
   IIF(Item1 IN ('T4GI'), 'Gasoline ICEV City',               
   IIF(Item1 IN ('T4GA'), 'Gasoline Adv.ICEV City',           
@@ -404,16 +415,22 @@ SELECT * FROM
 ) GROUP BY Technology) WHERE Technology <> 'delete'
 
 
---- 15. New Cars (FACTOR!)
+--- 15. New Cars (<PARAM2>)
 
 SELECT * FROM       
-(SELECT Technology,   <TMPL> $ *SUM(T2000) AS 2000 <FAC> 1 / 1.5 <TMPL>  
+(SELECT Technology,   <TMPL> $ *SUM(T2000) AS 2000 <FAC> 1 / <PARAM2> <TMPL>  
  FROM (SELECT 
-<TMPL>T2000 * 
- IIF(Region IN ('AUSNZL'),1/135, IIF(Region IN ('ASIAPAC','LAC','BRAZIL'),1/156, IIF(Region IN ('CANMEX'),1/142, 
- IIF(Region IN ('CENASIA','RUSSIA'),1/132, IIF(Region IN ('CHINAREG'),1/152, IIF(Region IN ('EEUR','SSAFRICA'),1/124, 
- IIF(Region IN ('INDIA'),1/147, IIF(Region IN ('JPKRTW'),1/85,
- IIF(Region IN ('USA','MENA'),1/182,1/140))))))))) AS T2000<TMPL>  , 
+<TMPL> T2000 * 
+ IIF(Region IN ('AUSNZL'),1/135, 
+ IIF(Region IN ('ASIAPAC','LAC','BRAZIL'),1/156, 
+ IIF(Region IN ('CANMEX'),1/142, 
+ IIF(Region IN ('CENASIA','RUSSIA'),1/132,
+ IIF(Region IN ('CHINAREG'),1/152,
+ IIF(Region IN ('EEUR','SSAFRICA'), 1/124, 
+ IIF(Region IN ('INDIA'),1/147, 
+ IIF(Region IN ('JPKRTW'),1/85,
+ IIF(Region IN ('USA','MENA'),
+ 1/182,1/140))))))))) AS T2000 <TMPL>, 
   IIF(Item1 IN ('T2GI', 'T2GA', 'T2DI', 'T2DA', 'T4GI', 'T4GA'), 'Liquid Fuel ICEV', 
   IIF(Item1 IN ('T2GH', 'T2DH', 'T4GH'), 'Liquid Fuel Hybrid',   
   IIF(Item1 IN ('T2EH', 'T4EH'),         'Liquid Fuel Plug-in',  
@@ -961,64 +978,57 @@ UNION
 
 
 
---- 24. BEV CO2 Emission
-
-SELECT TOP 1 'ICE(TtW) WEUR' AS Em,  <TMPL> 0 AS T2000 <TMPL>  
-FROM tblTIDDATA
-
-
-
----25. Oil Depletion
+---25. Oil Depletion (only 10 year time steps correct)
 
 
 SELECT * FROM ( 
-SELECT Technology,   <TMPL>0.001 * SUM(T2000) AS 2000 <TMPL>  
-FROM ( 
- SELECT Technology,                                            
-  y0 AS T2010,                                                 
-  y0 - 10*( 3/4*y1+1/4*y2                           ) AS T2020,
-  y0 - 10*(                 y1+y2                   ) AS T2030,
-  y0 - 10*( 3/4*y3+1/4*y4  +y1+y2                   ) AS T2040,
-  y0 - 10*(                 y1+y2+y3+y4             ) AS T2050,
-  y0 - 10*( 3/4*y5+1/4*y6  +y1+y2+y3+y4             ) AS T2060,
-  y0 - 10*(                 y1+y2+y3+y4+y5+y6       ) AS T2070,
-  y0 - 10*( 3/4*y7+1/4*y8  +y1+y2+y3+y4+y5+y6       ) AS T2080,
-  y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2090,
-  y0 - 10*( 3/4*y9+1/4*y10 +y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2100,
-  y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8+y9+y10 ) AS T2110 
+ SELECT Technology, <TMPL> 0.001 * SUM(T2000) AS 2000 <TMPL>  
  FROM ( 
- SELECT 
-  IIF(t1.Item1 = 'MINOI11', 'Category I',   
-  IIF(t1.Item1 = 'MINOI21', 'Category II',  
-  IIF(t1.Item1 = 'MINOI31', 'Category III', 
-  IIF(t1.Item1 = 'MINOI41', 'Category IV',  
-  IIF(t1.Item1 = 'MINOI51', 'Category V',   
-  IIF(t1.Item1 = 'MINOI61', 'Category VI', t1.Item1 )))))) AS Technology, 
-   t1.Value AS y0,                          
-IIF(2020 < 2020,   IIF(ISNULL(t2.T2010),0,t2.T2010),  0)   AS y1,  
-   IIF(ISNULL(t2.T2020),0,t2.T2020) AS y2,  
-   IIF(ISNULL(t2.T2030),0,t2.T2030) AS y3,  
-   IIF(ISNULL(t2.T2040),0,t2.T2040) AS y4,  
-   IIF(ISNULL(t2.T2050),0,t2.T2050) AS y5,  
-   IIF(ISNULL(t2.T2060),0,t2.T2060) AS y6,  
-   IIF(ISNULL(t2.T2070),0,t2.T2070) AS y7,  
-   IIF(ISNULL(t2.T2080),0,t2.T2080) AS y8,  
-   IIF(ISNULL(t2.T2090),0,t2.T2090) AS y9, 
-   IIF(ISNULL(t2.T2100),0,t2.T2100) AS y10, 
-   IIF(ISNULL(t2.T2110),0,t2.T2110) AS y11  
-  FROM tblTIDDATA AS t1                            
-  LEFT JOIN                                        
-  (SELECT * FROM tblTRESULTS                       
-    WHERE Parameter = 'RESOURCE.L'                 
-      AND CaseName  = <SCENARIO> ) AS t2   
-  ON t1.Item1 = t2.Item1                           
+  SELECT Technology,                                            
+   y0 AS T2020,                                                 
+   y0 - 10*( 3/4*y1+1/4*y2                           ) AS T2030,
+   y0 - 10*(                 y1+y2                   ) AS T2040,
+   y0 - 10*( 3/4*y3+1/4*y4  +y1+y2                   ) AS T2050,
+   y0 - 10*(                 y1+y2+y3+y4             ) AS T2060,
+   y0 - 10*( 3/4*y5+1/4*y6  +y1+y2+y3+y4             ) AS T2070,
+   y0 - 10*(                 y1+y2+y3+y4+y5+y6       ) AS T2080,
+   y0 - 10*( 3/4*y7+1/4*y8  +y1+y2+y3+y4+y5+y6       ) AS T2090,
+   y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2100,
+   y0 - 10*( 3/4*y9+1/4*y10 +y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2110 
+  FROM ( 
+   SELECT 
+    IIF(t1.Item1 = 'MINOI11', 'Category I',   
+    IIF(t1.Item1 = 'MINOI21', 'Category II',  
+    IIF(t1.Item1 = 'MINOI31', 'Category III', 
+    IIF(t1.Item1 = 'MINOI41', 'Category IV',  
+    IIF(t1.Item1 = 'MINOI51', 'Category V',   
+    IIF(t1.Item1 = 'MINOI61', 'Category VI', t1.Item1 )))))) AS Technology, 
+    t1.Value AS y0,                            
+    IIF(ISNULL(t2.T2020),0,t2.T2020) AS y1,  
+    IIF(ISNULL(t2.T2030),0,t2.T2030) AS y2,  
+    IIF(ISNULL(t2.T2040),0,t2.T2040) AS y3,  
+    IIF(ISNULL(t2.T2050),0,t2.T2050) AS y4,  
+    IIF(ISNULL(t2.T2060),0,t2.T2060) AS y5,  
+    IIF(ISNULL(t2.T2070),0,t2.T2070) AS y6,  
+    IIF(ISNULL(t2.T2080),0,t2.T2080) AS y7,  
+    IIF(ISNULL(t2.T2090),0,t2.T2090) AS y8, 
+    IIF(ISNULL(t2.T2100),0,t2.T2100) AS y9, 
+    IIF(ISNULL(t2.T2110),0,t2.T2110) AS y10  
+   FROM tblTIDDATA AS t1                            
+   LEFT JOIN                                        
+   (SELECT * FROM tblTRESULTS                       
+     WHERE Parameter = 'RESOURCE.L'                 
+       AND CaseName  = <SCENARIO> 
+   ) AS t2   
+   ON t1.Item1 = t2.Item1                           
     AND t1.Region = t2.Region                      
-  WHERE t1.Parameter = 'CUM'                       
-   AND t1.ScenarioName IN (<PARAM1>) 
-   AND t1.Region IN (<REGION>)             
-   AND t1.Item1 LIKE 'MINOI%' 
-  ) ) GROUP BY Technology ) 
-WHERE Technology <> 'Category IV' 
+   WHERE t1.Parameter = 'CUM'                       
+     AND t1.ScenarioName IN (<PARAM1>) 
+     AND t1.Region IN (<REGION>)             
+     AND t1.Item1 LIKE 'MINOI*' 
+   ) 
+  ) GROUP BY Technology 
+ ) WHERE Technology <> 'Category IV' 
 
 
 
@@ -1064,7 +1074,7 @@ WHERE Technology <> 'Category IV'
    AND Region <> 'REGION0' 
    AND Parameter IN ('OUTOTH.PRC.A??')
    AND Item1 IN ('BWTD','BL26', 'OCTD','CGTD','SUTD','STTD','DWTD') 
-   AND Item2 NOT LIKE 'ETL%'
+   AND Item2 NOT LIKE 'ETL*'
  GROUP BY Region
 
 
@@ -1357,56 +1367,7 @@ AS T2000 <TMPL>,
 
               
               
-          
-
-
-
----'36. GDP market scenario
-
-SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
-FROM (
-  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
-  FROM tblTRESULTS
- ) 
-
-
-
-
---- '37. GDP state scenario
-              
-SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
-FROM (
-  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
-  FROM tblTRESULTS
- ) 
-
-
-
-
-
---- 38. Population Jazz scenario
-
-SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
-FROM (
-  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
-  FROM tblTRESULTS
- ) 
-
-
-
-
-
-
-
---- 39. Population Symphony scenario
-              
-SELECT TOP 1 Region, <TMPL> 0.001 * SUM(T2000) AS 2000<TMPL> 
-FROM (
-  SELECT 'ASIAPAC' As Region, 1 As T2010, 2 As T2020, 3 As T2030, 4 As T2040, 5 As T2050, 6 As T2060, 7 As T2070, 8 As T2080, 9 As T2090, 10 As T2100, 11 As T2110 
-  FROM tblTRESULTS
- ) 
-
-
+         
 
 --- 40. Fuels in Industry Thermal
 
@@ -1424,7 +1385,7 @@ FROM (
       FROM tblTRESULTS                     
       WHERE Parameter = 'FUELC_ENT_DM'     
         AND Item3 IN ('I1')                  
-        AND Item2 NOT LIKE 'ETL%'            
+        AND Item2 NOT LIKE 'ETL*'            
         AND CaseName = <SCENARIO>    
         AND Region IN (<REGION>)     
   ) GROUP BY Fuel                 
@@ -1444,7 +1405,7 @@ FROM (
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('I2')                  
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
   ) GROUP BY Fuel                 
@@ -1464,7 +1425,7 @@ FROM (
       FROM tblTRESULTS                     
       WHERE Parameter = 'FUELC_ENT_DM'     
         AND Item3 IN ('I3')                  
-        AND Item2 NOT LIKE 'ETL%'            
+        AND Item2 NOT LIKE 'ETL*'            
         AND CaseName = <SCENARIO>    
         AND Region IN (<REGION>)     
   ) GROUP BY Fuel                 
@@ -1488,7 +1449,7 @@ FROM (
       FROM tblTRESULTS                     
       WHERE Parameter = 'FUELC_ENT_DM'     
         AND Item3 IN ('R2','R3')             
-        AND Item2 NOT LIKE 'ETL%'            
+        AND Item2 NOT LIKE 'ETL*'            
         AND CaseName = <SCENARIO>    
         AND Region IN (<REGION>)     
  ) GROUP BY Fuel                 
@@ -1505,7 +1466,7 @@ FROM (
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('R1')                  
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
       ) GROUP BY Fuel                 
@@ -1578,11 +1539,11 @@ FROM (SELECT *,
 
 --- 48. Net Import/Export by Region
 
- SELECT Region, <TMPL> SUM(IIF(Item1 LIKE 'EXP%' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ SELECT Region, <TMPL> SUM(IIF(Item1 LIKE 'EXP*' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
  FROM tblTRESULTS                 
  WHERE Parameter IN ('R_TSEP.L', 'R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_TSEPELC.L')
    AND CaseName  = <SCENARIO> 
-   AND Item2 NOT LIKE 'ETL%' 
+   AND Item2 NOT LIKE 'ETL*' 
    AND Region <> 'REGION0' 
  GROUP BY Region 
 
@@ -1594,7 +1555,7 @@ FROM (SELECT *,
   FROM tblTRESULTS                 
   WHERE Parameter IN ('R_TSEP.L','R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_TSEPELC.L')
   AND CaseName  = <SCENARIO> 
-  AND Item2 NOT LIKE 'ETL%' 
+  AND Item2 NOT LIKE 'ETL*' 
   AND Region <> 'REGION0' 
  GROUP BY Region 
 
@@ -1606,19 +1567,18 @@ SELECT * FROM (
 SELECT Technology,   <TMPL>0.001 * SUM(T2000) AS 2000 <TMPL>  
  FROM ( 
   SELECT Technology,                                            
-   y0 AS T2010,                                                 
-   y0 - 10*( 3/4*y1+1/4*y2                           ) AS T2020,
-   y0 - 10*(                 y1+y2                   ) AS T2030,
-   y0 - 10*( 3/4*y3+1/4*y4  +y1+y2                   ) AS T2040,
-   y0 - 10*(                 y1+y2+y3+y4             ) AS T2050,
-   y0 - 10*( 3/4*y5+1/4*y6  +y1+y2+y3+y4             ) AS T2060,
-   y0 - 10*(                 y1+y2+y3+y4+y5+y6       ) AS T2070,
-   y0 - 10*( 3/4*y7+1/4*y8  +y1+y2+y3+y4+y5+y6       ) AS T2080,
-   y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2090,
-   y0 - 10*( 3/4*y9+1/4*y10 +y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2100,
-   y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8+y9+y10 ) AS T2110 
+   y0 AS T2020,                                                 
+   y0 - 10*( 3/4*y1+1/4*y2                           ) AS T2030,
+   y0 - 10*(                 y1+y2                   ) AS T2040,
+   y0 - 10*( 3/4*y3+1/4*y4  +y1+y2                   ) AS T2050,
+   y0 - 10*(                 y1+y2+y3+y4             ) AS T2060,
+   y0 - 10*( 3/4*y5+1/4*y6  +y1+y2+y3+y4             ) AS T2070,
+   y0 - 10*(                 y1+y2+y3+y4+y5+y6       ) AS T2080,
+   y0 - 10*( 3/4*y7+1/4*y8  +y1+y2+y3+y4+y5+y6       ) AS T2090,
+   y0 - 10*(                 y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2100,
+   y0 - 10*( 3/4*y9+1/4*y10 +y1+y2+y3+y4+y5+y6+y7+y8 ) AS T2110
     FROM ( 
-     SELECT 
+      SELECT 
   	IIF(t1.Item1 = 'MINNG11', 'Category I',   
   	IIF(t1.Item1 = 'MINNG21', 'Category II',  
   	IIF(t1.Item1 = 'MINNG31', 'Category III', 
@@ -1626,31 +1586,31 @@ SELECT Technology,   <TMPL>0.001 * SUM(T2000) AS 2000 <TMPL>
   	IIF(t1.Item1 = 'MINNG51', 'Category V',   
   	IIF(t1.Item1 = 'MINNG61', 'Category VI', t1.Item1 )))))) AS Technology, 
    	t1.Value AS y0,                          
-	IIF(2020 < 2020,   IIF(ISNULL(t2.T2010),0,t2.T2010),  0)   AS y1,  
-  	IIF(ISNULL(t2.T2020),0,t2.T2020) AS y2,  
-  	IIF(ISNULL(t2.T2030),0,t2.T2030) AS y3,  
-  	IIF(ISNULL(t2.T2040),0,t2.T2040) AS y4,  
-  	IIF(ISNULL(t2.T2050),0,t2.T2050) AS y5,  
-  	IIF(ISNULL(t2.T2060),0,t2.T2060) AS y6,  
-  	IIF(ISNULL(t2.T2070),0,t2.T2070) AS y7,  
-  	IIF(ISNULL(t2.T2080),0,t2.T2080) AS y8,  
-  	IIF(ISNULL(t2.T2090),0,t2.T2090) AS y9,  
-  	IIF(ISNULL(t2.T2100),0,t2.T2100) AS y10, 
-  	IIF(ISNULL(t2.T2110),0,t2.T2110) AS y11  
-    FROM tblTIDDATA AS t1                            
-    LEFT JOIN                                        
-    (SELECT * FROM tblTRESULTS                       
+  	IIF(ISNULL(t2.T2020),0,t2.T2020) AS y1,  
+  	IIF(ISNULL(t2.T2030),0,t2.T2030) AS y2,  
+  	IIF(ISNULL(t2.T2040),0,t2.T2040) AS y3,  
+  	IIF(ISNULL(t2.T2050),0,t2.T2050) AS y4,  
+  	IIF(ISNULL(t2.T2060),0,t2.T2060) AS y5,  
+  	IIF(ISNULL(t2.T2070),0,t2.T2070) AS y6,  
+  	IIF(ISNULL(t2.T2080),0,t2.T2080) AS y7,  
+  	IIF(ISNULL(t2.T2090),0,t2.T2090) AS y8,  
+  	IIF(ISNULL(t2.T2100),0,t2.T2100) AS y9, 
+  	IIF(ISNULL(t2.T2110),0,t2.T2110) AS y10  
+      FROM tblTIDDATA AS t1                            
+      LEFT JOIN                                        
+      (SELECT * FROM tblTRESULTS                       
        WHERE Parameter = 'RESOURCE.L'                 
-         AND CaseName  = <SCENARIO> ) AS t2   
-     ON t1.Item1 = t2.Item1                           
-      AND t1.Region = t2.Region                      
+         AND CaseName  = <SCENARIO> 
+      ) AS t2   
+      ON t1.Item1 = t2.Item1                           
+       AND t1.Region = t2.Region                      
      WHERE t1.Parameter = 'CUM'                       
      AND t1.ScenarioName = <PARAM1>    
      AND t1.Region IN (<REGION>)             
-     AND t1.Item1 LIKE 'MINNG%' 
-   )  ) 
-    GROUP BY Technology ) 
-      WHERE Technology <> 'Category IV' 
+     AND t1.Item1 LIKE 'MINNG*' 
+    )
+ ) GROUP BY Technology 
+ ) WHERE Technology <> 'Category IV' 
 
 
 
@@ -1672,8 +1632,8 @@ SELECT Fuel,   <TMPL>0.001*SUM(T2000) AS 2000<TMPL>
        'Other (non transport)'))))))))) AS Fuel              
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
-       AND Item2 NOT LIKE 'ETL%'            
-       AND Item3 NOT LIKE 'T%'              
+       AND Item2 NOT LIKE 'ETL*'            
+       AND Item3 NOT LIKE 'T*'              
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)      
 UNION   
@@ -1693,7 +1653,7 @@ UNION
       WHERE CaseName = <SCENARIO>  
         AND Parameter = 'ACTIVITY.L'       
         AND Region IN (<REGION>)   
-        AND Item1 LIKE 'BL%'           
+        AND Item1 LIKE 'BL*'           
 UNION   
   SELECT *, 
        IIF(Item2 = 'HDN', 'Hydrogen',      
@@ -1755,7 +1715,7 @@ SELECT * FROM
 
 --- 54. Net Gas Import/Export by Region
 
- SELECT Region,   <TMPL>SUM(IIF(Item1 LIKE 'EXP%' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000<TMPL>  
+ SELECT Region,   <TMPL>SUM(IIF(Item1 LIKE 'EXP*' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000<TMPL>  
   FROM tblTRESULTS                 
   WHERE ( 
   (Item2 = 'LNG' AND Parameter IN ('R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L')) 
@@ -1809,7 +1769,7 @@ SELECT * FROM
        'Other'))))))))) AS Sector           
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
       ) GROUP BY Sector                     
@@ -1822,7 +1782,7 @@ SELECT * FROM
      SELECT Region,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
       FROM tblTRESULTS                     
       WHERE Parameter = 'FUELC_ENT_DM'     
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
       GROUP BY Region                       
 
@@ -1835,7 +1795,7 @@ SELECT * FROM
       FROM tblTRESULTS                     
       WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('I1','I2','I3')       
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
       GROUP BY Region                       
 
@@ -1847,7 +1807,7 @@ SELECT * FROM
       FROM tblTRESULTS                     
       WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('R1','R2','R3')       
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
       GROUP BY Region                       
 
@@ -1869,7 +1829,7 @@ SELECT * FROM
      SELECT Region,   <TMPL>0.001 * SUM(T2000) AS 2000<TMPL>  
       FROM tblTRESULTS                     
       WHERE Parameter = 'FUELC_ENT_DM'     
-       AND Item2 NOT LIKE 'ETL%'           
+       AND Item2 NOT LIKE 'ETL*'           
        AND Item3 = 'I3'                    
        AND CaseName = <SCENARIO>   
       GROUP BY Region                      
@@ -1893,7 +1853,7 @@ SELECT * FROM
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('R1', 'R2','R3')       
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
    ) GROUP BY Fuel                 
@@ -1918,7 +1878,7 @@ SELECT * FROM
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('I1','I2')                  
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
   ) GROUP BY Fuel                 
@@ -1944,7 +1904,7 @@ SELECT * FROM
        FROM tblTRESULTS                     
        WHERE Parameter = 'FUELC_ENT_DM'     
        AND Item3 IN ('I1','I2','I3')                  
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
   ) GROUP BY Fuel                 
@@ -1973,11 +1933,11 @@ SELECT * FROM
 
 --- 68. Total Net imports by region
 
- SELECT Region, <TMPL> SUM(IIF(Item1 LIKE 'EXP%' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
+ SELECT Region, <TMPL> SUM(IIF(Item1 LIKE 'EXP*' OR Parameter = 'R_GTRD(ENT)exp.L',-0.001,0.001)*T2000) AS 2000 <TMPL>  
  FROM tblTRESULTS                 
  WHERE Parameter IN ('R_TSEP.L','R_GTRD(ENT)imp.L', 'R_GTRD(ENT)exp.L', 'R_TSEPELC.L')
    AND CaseName  = <SCENARIO> 
-   AND Item2 NOT LIKE 'ETL%' 
+   AND Item2 NOT LIKE 'ETL*' 
    AND Region <> 'REGION0' 
  GROUP BY Region 
 
@@ -2001,7 +1961,7 @@ SELECT * FROM
        AND Item1 IN ('E01','E02','EIG','ES1','H01','E6C','EC2','EIC','H01SF','E70',
                      'E11','E12','E13','E15','E6A','E1C','E21','E22','E31','E41','E41B',
                      'E42','E61','E62','BW2', 'BW5', 'BWA','E80','BB1','E82','E83','E81','EH2','EH3')       
-       AND Item2 NOT LIKE 'ETL%'            
+       AND Item2 NOT LIKE 'ETL*'            
        AND CaseName = <SCENARIO>    
        AND Region IN (<REGION>)     
  ) GROUP BY Fuel                 
@@ -2161,6 +2121,107 @@ SELECT * FROM
   AND Item2 IN ('BMTX') 
   AND Region <> 'REGION0' 
  GROUP BY Region 
+
+
+
+--- 82. Synfuel Split Query
+
+SELECT Cat, Process, 
+     Sum(v2020*w2020) AS wv2020,
+     Sum(v2030*w2030) AS wv2030,
+     Sum(v2040*w2040) AS wv2040,
+     Sum(v2050*w2050) AS wv2050,
+     Sum(v2060*w2060) AS wv2060
+FROM (
+
+  SELECT t3.Region, t3.Category As Cat, t3.Item1 As Process, 
+      t3.T2020 as v2020, t4.weight2020 as w2020, 
+      t3.T2030 as v2030, t4.weight2030 as w2030,
+      t3.T2040 as v2040, t4.weight2040 as w2040, 
+      t3.T2050 as v2050, t4.weight2050 as w2050,
+      t3.T2060 as v2060, t4.weight2060 as w2060 
+  FROM 
+     (
+     
+SELECT t1.Region AS Region, t1.Item1 AS Item1, t1.category AS Category,
+IIF(t2.TTT2020 = 0, 0, t1.TT2020/t2.TTT2020) as T2020,
+IIF(t2.TTT2030 = 0, 0, t1.TT2030/t2.TTT2030) as T2030, 
+IIF(t2.TTT2040 = 0, 0, t1.TT2040/t2.TTT2040) as T2040,
+IIF(t2.TTT2050 = 0, 0, t1.TT2050/t2.TTT2050) as T2050,
+IIF(t2.TTT2060 = 0, 0, t1.TT2060/t2.TTT2060) as T2060
+FROM 
+(
+SELECT Region, Item1,
+        IIF(Item1 IN ('F41', 'HTF', 'NTF'), 'SynFossil',   
+          IIF(Item1 IN ('BG1', 'BG3','F42'), 'SynRen', 
+              IIF(Item1 IN ('S3M','S4M','SRM'), 'MeOH',       
+                  'dummy' ))) AS category,
+                   T2020 AS TT2020, 
+                   T2030 AS TT2030,  
+                   T2040 AS TT2040, 
+                   T2050 AS TT2050,
+                   T2060 AS TT2060        
+      FROM tblTRESULTS              
+       WHERE CaseName = 'SO' 
+         AND Parameter = 'ACTIVITY.L'     
+        AND Item1 IN ('F41', 'HTF', 'NTF', 'BG1', 'BG3','F42', 'S3M','S4M','SRM')
+) AS t1 
+
+LEFT JOIN 
+
+( 
+SELECT Region, Category,  
+       SUM(TT2020) AS TTT2020, 
+       SUM(TT2030) AS TTT2030,
+       SUM(TT2040) AS TTT2040, 
+       SUM(TT2050) AS TTT2050, 
+      SUM(TT2060) AS TTT2060  
+FROM (   
+SELECT Region,
+        IIF(Item1 IN ('F41', 'HTF', 'NTF'), 'SynFossil',   
+          IIF(Item1 IN ('BG1', 'BG3','F42'), 'SynRen', 
+              IIF(Item1 IN ('S3M','S4M','SRM'), 'MeOH',       
+                  'dummy' ))) AS Category,
+                   T2020 AS TT2020, 
+                   T2030 AS TT2030,  
+                   T2040 AS TT2040, 
+                   T2050 AS TT2050,
+                   T2060 AS TT2060        
+      FROM tblTRESULTS              
+       WHERE CaseName = 'SO' 
+         AND Parameter = 'ACTIVITY.L'     
+        AND Item1 IN ('F41', 'HTF', 'NTF', 'BG1', 'BG3','F42', 'S3M','S4M','SRM')
+  ) 
+ GROUP BY Region, Category 
+) AS t2
+ 
+ON t1.Region = t2.Region AND t1.category = t2.category
+      )  AS t3 
+     LEFT JOIN 
+     (
+     SELECT Region, Category, 
+         SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L', 1, 0) *T2020) AS weight2020,
+         SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L', 1, 0) *T2030) AS weight2030,
+         SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L', 1, 0) *T2040) AS weight2040,
+         SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L', 1, 0) *T2050) AS weight2050,
+         SUM(IIF(Parameter = 'R_GTRD(ENT)exp.L', 1, 0) *T2060) AS weight2060
+     FROM (
+        SELECT *, IIF(Item2 IN ('FGX'), "SynRen",
+                             IIF(Item2 IN ('FHX'), "SynFossil",
+                               IIF(Item2 IN ('BMTX'), "MeOH",
+                                  "dummy2"))) AS Category  
+        FROM tblTRESULTS                 
+        WHERE Parameter IN ('R_GTRD(ENT)exp.L', 'R_GTRD(ENT)exp.M')
+           AND CaseName  = 'SO'
+           AND Item2 IN ('FGX', 'FHX', 'BMTX')
+         )
+    GROUP BY Region, Category
+    )  AS t4 
+    ON t3.Category = t4.Category AND t3.Region = t4.Region
+
+
+) 
+GROUP BY Cat, Process
 
 
 
