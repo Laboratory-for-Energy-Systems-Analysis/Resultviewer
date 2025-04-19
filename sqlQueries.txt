@@ -367,7 +367,7 @@ UNION
 --- 13. New Long-Range Cars (<PARAM2>)
 
 SELECT * FROM       
-(SELECT Technology,   <TMPL>$*SUM(T2000) AS 2000 <FAC> 1 / <PARAM2> <TMPL>  
+(SELECT Technology, <TMPL> $ *SUM(T2000) AS 2000 <FAC> 1 / <PARAM2> <TMPL>  
  FROM (SELECT 
 <TMPL> T2000 * 
  IIF(Region IN ('AUSNZL'), 1/135,
@@ -400,8 +400,9 @@ SELECT * FROM
 --- 14. New Short-Range Cars (<PARAM2>)
 
 SELECT * FROM       
-(SELECT Technology, <TMPL> $ * SUM(T2000) AS 2000 <FAC> 1 / <PARAM2> <TMPL>  
- FROM (SELECT   <TMPL>1/150*T2000 AS T2000<TMPL>  , 
+(SELECT Technology, <TMPL> $ *SUM(T2000) AS 2000 <FAC> 1 / <PARAM2> <TMPL>  
+ FROM (SELECT 
+ <TMPL> 1/150 * T2000 AS T2000 <TMPL>, 
   IIF(Item1 IN ('T4GI'), 'Gasoline ICEV City',               
   IIF(Item1 IN ('T4GA'), 'Gasoline Adv.ICEV City',           
   IIF(Item1 IN ('T4GH'), 'Gasoline Hybrid City',             
@@ -1248,18 +1249,6 @@ UNION
    AND Region IN (<REGION>) 
 ) GROUP BY Technology
 
-
-
-
---- 33. CO2-Emissions from Cars
-
-  SELECT Region, <TMPL> 44/12*0.001*SUM(T2000) AS 2000 <TMPL>  
-  FROM tblTRESULTS                     
-  WHERE CaseName  = <SCENARIO> 
-    AND Parameter = 'EMISSION.L'       
-    AND Item2     = 'CARCO2'           
-  GROUP BY Region                      
- 
 
 
 
