@@ -1,0 +1,44 @@
+
+This a test query
+
+
+--- Total Primary Energy Supply 
+
+
+  TRANSFORM Sum(VALUE) 
+  SELECT PRODUCT AS Technology
+  FROM [WEO2024_AnnexA_Free_Dataset$] 
+  WHERE SCENARIO = <SCENARIO>  
+    AND PRODUCT NOT IN ('Total','Renewables','Coal','Natural gas')
+    AND FLOW = 'Total energy supply'
+    AND CATEGORY = 'Energy'
+  GROUP BY PRODUCT
+  PIVOT YEAR
+  
+
+--- Total final consumption 
+
+  TRANSFORM Sum(VALUE) 
+  SELECT PRODUCT AS Technology
+  FROM [WEO2024_AnnexA_Free_Dataset$] 
+  WHERE SCENARIO = <SCENARIO>  
+    AND PRODUCT NOT LIKE ('Total%')
+    AND FLOW = 'Total final consumption'
+    AND CATEGORY = 'Energy'
+  GROUP BY PRODUCT
+  PIVOT YEAR
+
+
+--- Total CO2 removed 
+
+  TRANSFORM Sum(VALUE) 
+  SELECT FLOW AS Technology
+  FROM [WEO2024_AnnexA_Free_Dataset$] 
+  WHERE SCENARIO = <SCENARIO>  
+    AND FLOW IN ('Direct air capture: offsite', 'Biofuels production')
+    AND CATEGORY IN ('CO2 DAC stored','CO2 process stored')
+  GROUP BY FLOW
+  PIVOT YEAR
+
+
+
