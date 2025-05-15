@@ -1,46 +1,70 @@
-# Resultviewer
+# Resultviewer (SQL in Excel)
+
+> Leverage the power of SQL in Excel for data extraction and charting.
+
+> Special features for multi-regional energy system models with output of different scenarios over time steps
 
 ## Purpose
 
-* The Resultviewer is an Excel-file with macro-code behind that executes SQL-queries on tabular input data (another .xslx Excel-sheet or an Access-DB) and puts the resulting tables with a charts on an Excel-sheet.
-The charts can be customized with a template: Type (column, line etc.), colors, ordering, labeling.
-* The Resultviewer is geared towards executing the same SQL-query for different scenarios and for different regions (where 'scenario' and 'region' are field-column in the input table).
-* The Resultviewer is geared also to show data over time by providing a template in the SQL-queries, such that not all time-steps have to be specified manually.
+> The Resultviewer is an MS Excel file with macros inside that executes an arbitrary number of SQL-queries on tabular input data, and puts the extracted result tables together with an optional chart on a new Excel-sheet.
+- Currently implemented input tables: A  sheet in another Excel-file (.xslx), or a table of an MS Access database (.mdb)
+- The SQL-queries are specified in a separate text file
+- The Resultviewer is optimized for speed. It can put houndreds of charts in seconds.
+- Using VBA-macros, you can easily customize the Resultviewer to your needs, e.g. by changing the layout of the charts
 
-## Description
 
+## Capabilities
+- **Chart customization:** Type (column, line etc.), color, order of rows, labels, size, second axis
+- **Multiple charts by scenario and region:** The same SQL-query can be executed for several scenarios and regions ('scenario' and 'region' are field-header-column in the input table). For this, you write in the SQL-query `<SCENARIO>` and `<REGION>`, and this templates will substituted automatically.
+- **Templates for time steps:** To make the writing of SQL-queris with many time steps as table-columns more simple, a template can be used in the SQL-queries, such that only a single time-step (template) has to be entered manually.
+- **Comparison of scenarios:** In the Resultviewer, a new scenario is put on a new sheet. For better comparison, vertical axes can be levelized across sheets, and charts of three scenarios can be put on a single sheet for side-by-side comparison.
+
+## Description/How to use
+
+
+
+To control the import, the Resultviewer employs a panel and two Excel sheets:
+1. A **Control panel**. To access: Go to the ribbon of Excel --> Add-in. You see  a row of buttons. Press `Panel`, which opens the control panel of the Resultviewer
+2. A **setting** sheet, and a **color and order** sheet. The actual names of the sheets in Excel can be determined in the panel, such that different settings can be used; for our global energy system model, we use for example the names `SETTING` and `COLOR&ORDER`, and for the example the names are chosen to be `SETTING_Example` and `COLOR&ORDER_Example`.  
+
+### Run the example
+
+1. Download from this site the 3 files: 
+	- `Resultviewer_NT.xls`
+	- `sql_queries_Example.txt`
+	- `WEO2024.xlsx`
+2. Open `Resultviewer_NT.xls`, and enable macros (if not already done)
+3. In the Resultviewer, go to sheet `COLOR&ORDER_Example`. Look for the table a little bit on the right that has the paths to `WEO2024.xlsx` and `sql_queries_Example.txt`. Adjust the paths to the locations of your files. 
+5. In the control panel, adjust the name of the color & ordering sheet to `COLOR&ORDER_Example`, and press `Load` to load values from the aforementioned table into the panel. Now, the panel should have the correct values of the example. Clearly, you could have entered the values also manually directly in the control panel.
+6. In the control panel, select a scenario in the drop-down box
+7. In the control panel, press `View Scenario`
 
 ## FAQ
 
-* **Why is the Excel provides in .xls format, and not in the newer .xslm?** You can save the .xls as .xlsm, without any problem. We ahve found that the .xls format is more 
-          stable with many charts and for VBA, despite taht .xlsm is a newer format, and should be more stable as advertised. Also .xls is much faster, perhaps also due to the fact, that .xls are limited to 65k rows, and .xlsm to 1M rows.  
-* **Why use Excel?** You have both chart and data available, and you have all the advanced Excel features available for post-calculations and copy-pasting. 
-* **Why use the VBA (Visual Basic for Application), instead of a newer connection types, for example Python/VB/C# <--> Excel?:** By our tests, VBA is up to three times faster then the other connections, which is due to Marahalling overhad. Also, the VBA code is directly accesible inside Excel. 
-* **How many charts can you put into Excel?** By our experience, after approx. 1000 charts, Excel seems to break-down (out of memory, or, file cannot be saved etc.). This is easily reached, e.g. with 20 regions, 20 scenarios, 30 charts per scenario. 
-* **Can you have several Resultsviewers open?** Yes, but mind the limit of the number of charts. Excel may go out of memory, and files cannot be saved.
-
-## Caveats
-* Names in the column scenario should be less than 26 characters long, because they become sheet names, occasionally with a number at the end (XX)
+- **Why use Excel?** You have both chart and data available, and you have all the advanced Excel features available for post-calculations and copy-pasting.
+- **Why is the Resutviewer in .xls format, and not in .xslm format?** Indeed, you can save the .xls as .xlsm  without any problem. We found that the .xls format is more stable if many charts are generated and also for VBA macros, despite that .xlsm is a newer format, and should be more stable as advertised. Also .xls is faster, perhaps also due to the fact that .xls is limited to 65k rows, whereas .xlsm can have 1M rows.  
+- **Why use macros (VBA, Visual Basic for Application), instead of a newer connection interface to Excel, by using Python/VB/C# etc.?** By our tests, VBA is up to three times faster then the other connections, which is due to the so-called Marahalling (VSTO). Also, the VBA code is directly accesible inside Excel, and can be adapted by the user.
 
 
-### SQL Dialect
+## Limits
+- Names in the column-header "scenario" should be less than 26 characters long because they will become sheet names (32 char. limit): If dubplicated, a number in parentheses will be appended, e.g. (2)
+- Not more than approx. 1000 charts in Excel. With more, Excel seems to break-down (out of memory, or, file cannot be saved etc.). 1000 charts is easily reached, e.g. with 20 regions, 20 scenarios, 30 charts per scenario. 
+- If you have several Resultsviewers open at the same time, Excel may become unstable, and files cannot be saved.
 
 
-#### DAO/ADO/Jet
-* The resultviewer uses currently ADO for MS Access databases (.mdb) and Excel
-* ADO (ActiveX Data Objects): Uses OLE DB (Object Linking and Embedding) programming interface. OLE DB is based on the Microsoft Component Object Model (COM).
-* DAO (Data Access Objects): ACE/Jet's natural interface layer. Deprecated in favor of ADO.
+### JET-engine limits
 
-#### Wildecard characters in LIKE: * or %
+For queries on Excel-sheets and MS Access, the Microsoft ACE/JET-engine with interface AOD is used. This engine has limits, but has also the advantage of the PIVOT-table functionality by using the keyword `TRANSFORM` as is used in the example. The limits are: 
+ 
+- CASE and nested IFF statements can have maximal 15 levels (otherwise the SQL-engine gives an error: "SQL query too complex").
+- Comments inside SQL queries are not allowed
+- A query cannot conists of several sequential SELECT statements, separated by a semicolon, as would be possible in other DB engines
+- The SQL syntax and table headers ar case-insensitive
+- The used interface AOD uses % in LIKE (and not * as is possible MS Access)
 
-* Depends on the "ANSI Query Mode" of the used interface. These modes are specific to ACE/Jet (but ressemble ANSI/ISO SQL-89 and SQL-92 Standards).
-* DAO interface uses ANSI-89 Query Mode ('traditional mode'): * 
-* ADO interface (OLE DB) uses ANSI-92 Query Mode ('SQL Server compatibility mode'): %
-* In ODBC the query mode can be explicitly specified via the ExtendedAnsiSQL flag
-* The MS Access user interface, from the 2003 version onwards, can use either query mode. So be aware: A query may work in MS Access unserinterface, but not with DAO or ADO
-* ACE/Jet SQL syntax has an ALIKE keyword, which allows the ANSI-92 Query Mode characters (% and _) regardless of the query mode of the interface
 
-#### Limitation of the JET-engine
-* Using the JET-engine, the SELECT and nested IFF statements can have maximal 15 levels (otherwise the SQL-engine gives an error: "SQL query too complex").
-* Comments inside SQL queries are not allowed
-* A query cannot conists of several sequential SELECT statements, separated by a semicolon, as in other DB engines
+## Background: DAO/ADO/Jet etc.
+- The resultviewer uses currently ADO for MS Access databases (.mdb) and Excel.
+- ADO (ActiveX Data Objects): Uses OLE DB (Object Linking and Embedding) programming interface. OLE DB is based on the Microsoft Component Object Model (COM). The older DAO (Data Access Objects) is deprecated in favor of ADO.
+- ACE/Jet has an "ANSI Query Mode" (ressembles ANSI/ISO SQL-89 and SQL-92 Standards). ADO interface (OLE DB) uses ANSI-92 Query Mode ('SQL Server compatibility mode'). The MS Access user interface, from the 2003 version onwards, can use either query mode (* or % in LIKE). So be aware: A query may work in MS Access unserinterface, but not with DAO or ADO In ODBC the query mode can be explicitly specified via the ExtendedAnsiSQL flag. ACE/Jet SQL syntax has an ALIKE keyword, which allows the ANSI-92 Query Mode characters (% and _) regardless of the query mode of the interface
+
