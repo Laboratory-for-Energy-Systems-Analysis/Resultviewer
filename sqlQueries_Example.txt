@@ -1,9 +1,13 @@
 
-This a test query
+- This an example query. Before the first query can be any text
+- An exception are three dashes because they are used to identify start of queries
+- Text on the same line after the three dashes is put on the select sheet of Excel
 
 
 --- Total Primary Energy Supply 
 
+- Comment text is allow before the first SELECT or TRANSFORM (please use UPPER case letters) 
+- No text is allowed after the query until the next three dashes or end of file
 
   TRANSFORM Sum(VALUE) 
   SELECT PRODUCT AS Technology

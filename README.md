@@ -39,6 +39,20 @@ To control the import, the Resultviewer employs a panel and two Excel sheets:
 6. In the control panel, select a scenario in the drop-down box
 7. In the control panel, press `View Scenario`
 
+
+## Colors
+
+Colors can be fully customized. In the Resultviewer, colors are specified by choosing a number between 1-57 of Excel's palette (i.e., the colorindex in Excel). The following options exist:
+
+- **Standard color scheme:** Colors for each chart series can be specified in the `COLOR&ORDER` sheet in column `D`. To see the color of a colorindex that you want to choose, the table `Excel Palette` lists all colors. Press `Update Colors` in the ribbon to see all colors updated.
+- **Alternative color scheme:** An alternative scheme can be entered in the next column `E` on the `COLOR&ORDER` sheet. In the panel, you can tick whether this alternative colors should be used for chart import. As a special feature of this alternative scheme, in next column `F` you can enter a letter `s` such that the color is shaded with diagonal strips. 
+- **Custom Excel color palette:** If you need other colors than available in the standard Excel palette, you can specify your own palette in table `Palette` on the `COLOR&ORDER` sheet by re-defining a colorindex 1-57 to a RGB value (e.g. `255,0,0` for red). Press `use palette (Color&Order sheet)` in the panel to use the new definitions. Note: Not all colorindices have to be re-defined, and any order of indices is allowed.
+- **Coloring the interior of a selected Excel object:** If you need to alter a color of a single object (e.g. a chart series in a single chart), press `Set color` in the ribbon. This will open a dialog, where you can select the colorindex. 
+
+
+## Issues (ToDo)
+ - The start of SQL queries in the text file is identified by the SQL keywords `TRANSFORM` or `SELECT`. Currently the code searches for uppercase keywords only (SQL syntax is case-insensitive).
+
 ## FAQ
 
 - **Why use Excel?** You have both chart and data available, and you have all the advanced Excel features available for post-calculations and copy-pasting.
