@@ -2,42 +2,42 @@
 
 > Leverage the power of SQL in Excel for data extraction and charting.
 
-> Special features for multi-regional energy system models with output of different scenarios over time steps
+> The Resultviewer has special features for multi-regional energy system models to output different scenarios over several time steps
 
 ## Purpose
 
-> The Resultviewer is an MS Excel file with macros inside that executes an arbitrary number of SQL-queries on tabular input data, and puts the extracted result tables together with an optional chart on a new Excel-sheet.
-- Currently implemented input tables: A  sheet in another Excel-file (.xslx), or a table of an MS Access database (.mdb)
+> The Resultviewer is an MS Excel file with macros inside that executes an arbitrary number of SQL-queries on tabular input data, and puts the extracted result tables together with an optional chart on new Excel-sheets.
+- Currently implemented input tables: A sheet in another Excel-file (.xslx), or a table of an MS Access database (.mdb)
 - The SQL-queries are specified in a separate text file
-- The Resultviewer is optimized for speed. It can put houndreds of charts in seconds.
-- Using VBA-macros, you can easily customize the Resultviewer to your needs, e.g. by changing the layout of the charts
+- The Resultviewer is optimized for speed. It can put hundreds of charts in seconds.
+- Because the Resultviewer is implemented in VBA inside Excel itself, you can easily customize the Resultviewer to your needs, e.g. by changing the layout of the charts.
 
 
 ## Capabilities
+
 - **Chart customization:** Type (column, line etc.), color, order of rows, labels, size, second axis
-- **Multiple charts by scenario and region:** The same SQL-query can be executed for several scenarios and regions ('scenario' and 'region' are field-header-column in the input table). For this, you write in the SQL-query `<SCENARIO>` and `<REGION>`, and this templates will substituted automatically.
-- **Templates for time steps:** To make the writing of SQL-queris with many time steps as table-columns more simple, a template can be used in the SQL-queries, such that only a single time-step (template) has to be entered manually.
+- **Multiple charts by scenario and region:** The same SQL-query can be executed for several scenarios and regions ('scenario' and 'region' are header columns (i.e., field names) in the input table). For this, you write in the SQL-query `<SCENARIO>` and `<REGION>`, and the templates will be substituted by a specified series of scenarios and regions.
+- **Templates for time steps:** In the SQL-queries, time steps are usually table columns, which can mean tediously long SELECT statements if many time steps are involved. Therefore, a template can be used in the SQL-queries, such that only a single time-step (i.e. the template) has to be entered manually. Note: If time steps are in different rows in the input table, use the `PIVOT' command.
 - **Comparison of scenarios:** In the Resultviewer, a new scenario is put on a new sheet. For better comparison, vertical axes can be levelized across sheets, and charts of three scenarios can be put on a single sheet for side-by-side comparison.
+
 
 ## Description/How to use
 
-
-
-To control the import, the Resultviewer employs a panel and two Excel sheets:
-1. A **Control panel**. To access: Go to the ribbon of Excel --> Add-in. You see  a row of buttons. Press `Panel`, which opens the control panel of the Resultviewer
-2. A **setting** sheet, and a **color and order** sheet. The actual names of the sheets in Excel can be determined in the panel, such that different settings can be used; for our global energy system model, we use for example the names `SETTING` and `COLOR&ORDER`, and for the example the names are chosen to be `SETTING_Example` and `COLOR&ORDER_Example`.  
+To control the import, the Resultviewer uses a control panel and settings in two Excel sheets:
+1. To access the **Control panel**: Go to the ribbon of Excel --> Add-in. You see  a row of buttons. Press `Panel`, which opens the control panel of the Resultviewer
+2. The sheets consists of a **setting**, and a **color and order** sheet. The actual names of the sheets in Excel can be determined in the panel, such that different settings can be used; for our global energy system model, and also in this documentation, we use the names `SETTING` and `COLOR&ORDER`; for the example the names are `SETTING_Example` and `COLOR&ORDER_Example`.  
 
 ### Run the example
 
-1. Download from this site the 3 files: 
-	- `Resultviewer_NT.xls`
-	- `sql_queries_Example.txt`
-	- `WEO2024.xlsx`
+1. Download from this site the following three files: 
+	- `Resultviewer_NT.xls`,
+	- `sql_queries_Example.txt`,
+	- `WEO2024.xlsx`.
 2. Open `Resultviewer_NT.xls`, and enable macros (if not already done)
-3. In the Resultviewer, go to sheet `COLOR&ORDER_Example`. Look for the table a little bit on the right that has the paths to `WEO2024.xlsx` and `sql_queries_Example.txt`. Adjust the paths to the locations of your files. 
+3. In the Resultviewer, go to sheet `COLOR&ORDER_Example`. Look for the table a little bit on the right that has the paths to the input table `WEO2024.xlsx` and the SQL queries `sql_queries_Example.txt`. Adjust the paths to the locations of your files. 
 5. In the control panel, adjust the name of the color & ordering sheet to `COLOR&ORDER_Example`, and press `Load` to load values from the aforementioned table into the panel. Now, the panel should have the correct values of the example. Clearly, you could have entered the values also manually directly in the control panel.
-6. In the control panel, select a scenario in the drop-down box
-7. In the control panel, press `View Scenario`
+6. In the control panel, select a scenario in the drop-down box.
+7. In the control panel, press `View Scenario`.
 
 
 ## Colors
@@ -55,15 +55,15 @@ Colors can be fully customized. In the Resultviewer, colors are specified by cho
 
 ## FAQ
 
-- **Why use Excel?** You have both chart and data available, and you have all the advanced Excel features available for post-calculations and copy-pasting.
-- **Why is the Resutviewer in .xls format, and not in .xslm format?** Indeed, you can save the .xls as .xlsm  without any problem. We found that the .xls format is more stable if many charts are generated and also for VBA macros, despite that .xlsm is a newer format, and should be more stable as advertised. Also .xls is faster, perhaps also due to the fact that .xls is limited to 65k rows, whereas .xlsm can have 1M rows.  
-- **Why use macros (VBA, Visual Basic for Application), instead of a newer connection interface to Excel, by using Python/VB/C# etc.?** By our tests, VBA is up to three times faster then the other connections, which is due to the so-called Marahalling (VSTO). Also, the VBA code is directly accesible inside Excel, and can be adapted by the user.
+- **Why use Excel?** You have both chart and data available at the same place, and you have all the advanced Excel features available for example for ex-post calculations, adjusting the charts, and copy-paste.
+- **Why is the Resutviewer provided in .xls format, and not in .xslm format?** Indeed, you can save the .xls as .xlsm  without problem. We found that the .xls format is more stable if many charts are generated and also for VBA macros, despite that .xlsm is a newer format and is advertized as more stable. Also .xls is faster, perhaps also due to the fact that .xls is limited to 65k rows, whereas .xlsm can have 1M rows.  
+- **Why use macros (VBA, Visual Basic for Application), instead of a newer interfaces to Excel, for example by using Python/VB/C#?** By our tests, VBA is up to three times faster then other connection, which is due to the time consuming so-called Marshalling (VSTO). Also, the VBA code is directly accesible for any users inside Excel, and can be easily adapted.
 
 
 ## Limits
-- Names in the column-header "scenario" should be less than 26 characters long because they will become sheet names (32 char. limit): If dubplicated, a number in parentheses will be appended, e.g. (2)
-- Not more than approx. 1000 charts in Excel. With more, Excel seems to break-down (out of memory, or, file cannot be saved etc.). 1000 charts is easily reached, e.g. with 20 regions, 20 scenarios, 30 charts per scenario. 
-- If you have several Resultsviewers open at the same time, Excel may become unstable, and files cannot be saved.
+
+- Names in the column-header "scenario" should be less than 26 characters long because they will become sheet names (32 char sheetname limit of Excel): If dubplicated, a number in parentheses will be appended, e.g. (2)
+- Not more than approx. 1000 charts are possible in Excel (counted over all open Excel workbooks). With more charts, Excel gives errors ("out of memory", "file cannot be saved" etc.). 1000 charts is easily reached, e.g. with 20 regions, 20 scenarios, 30 charts per scenario. In general, if you have several Resultsviewers open at the same time, Excel may become unstable, and files cannot be saved.
 
 
 ### JET-engine limits
