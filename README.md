@@ -70,7 +70,7 @@ Colors can be fully customized. In the Resultviewer, colors are specified by cho
 
 For queries on Excel-sheets and MS Access, the Microsoft ACE/JET-engine with interface AOD is used. This engine has limits, but has also the advantage of the PIVOT-table functionality by using the keyword `TRANSFORM` as is used in the example. The limits are: 
  
-- CASE and nested IFF statements can have maximal 15 levels (otherwise the SQL-engine gives an error: "SQL query too complex").
+- SWITCH and nested IFF statements can have maximal 15 levels (otherwise the SQL-engine gives an error: "SQL query too complex").
 - Comments inside SQL queries are not allowed
 - A query cannot conists of several sequential SELECT statements, separated by a semicolon, as would be possible in other DB engines
 - The SQL syntax and table headers ar case-insensitive
