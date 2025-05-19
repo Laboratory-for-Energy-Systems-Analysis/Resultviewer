@@ -6,16 +6,23 @@
 
 --- Total Primary Energy Supply 
 
-- Comment text is allow before the first SELECT or TRANSFORM (please use UPPER case letters) 
+- Comment text is allow before the first SEL* or TRANS* (please use UPPER case letters, and I cannot write the whole words here) 
 - No text is allowed after the query until the next three dashes or end of file
 
   TRANSFORM Sum(VALUE) 
-  SELECT PRODUCT AS Technology
-  FROM [WEO2024_AnnexA_Free_Dataset$] 
+  SELECT SWITCH( 
+     	   PRODUCT = 'Traditional use of biomass', 'Biomass (TUOB)',   
+           PRODUCT = 'Modern bioenergy: solid ',   'Biofuel (solid)',               
+           PRODUCT = 'Modern bioenergy: liquid',   'Biofuel (liquid)', 
+           PRODUCT = 'Modern bioenergy: gas',      'Biofuel (gasuous)', 
+           TRUE, PRODUCT
+                ) AS Technology 
+  FROM <TABLE> 
   WHERE SCENARIO = <SCENARIO>  
     AND PRODUCT NOT IN ('Total','Renewables','Coal','Natural gas', 'Oil: non-energy use')
     AND FLOW = 'Total energy supply'
     AND CATEGORY = 'Energy'
+    AND REGION IN (<REGION>)
   GROUP BY PRODUCT
   PIVOT YEAR
   
@@ -23,12 +30,17 @@
 --- Total final consumption 
 
   TRANSFORM Sum(VALUE) 
-  SELECT PRODUCT AS Technology
-  FROM [WEO2024_AnnexA_Free_Dataset$] 
+  SELECT SWITCH( 
+     	   PRODUCT = 'Solid bioenergy incl. TUOB', 'Biomass (solid+TUOB)',              
+           PRODUCT = 'Modern bioenergy: liquid',   'Biofuel (liquid)', 
+           TRUE, PRODUCT
+                ) AS Technology 
+  FROM <TABLE> 
   WHERE SCENARIO = <SCENARIO>  
     AND PRODUCT NOT LIKE ('Total%')
     AND FLOW = 'Total final consumption'
     AND CATEGORY = 'Energy'
+    AND REGION IN (<REGION>)
   GROUP BY PRODUCT
   PIVOT YEAR
 
@@ -36,11 +48,16 @@
 --- Total CO2 removed 
 
   TRANSFORM Sum(VALUE) 
-  SELECT FLOW AS Technology
-  FROM [WEO2024_AnnexA_Free_Dataset$] 
+  SELECT  SWITCH( 
+     	   FLOW = 'Biofuels production', 'BECC',              
+           FLOW = 'Direct air capture: offsite',   'DAC', 
+           TRUE, 'toDelete'
+                ) AS Technology 
+  FROM <TABLE>
   WHERE SCENARIO = <SCENARIO>  
     AND FLOW IN ('Direct air capture: offsite', 'Biofuels production')
     AND CATEGORY IN ('CO2 DAC stored','CO2 process stored')
+    AND REGION IN (<REGION>)
   GROUP BY FLOW
   PIVOT YEAR
 
