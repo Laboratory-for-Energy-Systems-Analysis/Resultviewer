@@ -1,25 +1,26 @@
 # Resultviewer (SQL in Excel)
 
-> Leverage the power of SQL in Excel for data extraction and charting. Put hundreds of charts in seconds.
+> Select tabular data from Excel (or other tabular data sources) and chart it. Put hundreds of charts in seconds.
 
-> Automatically chart tabular data over groups (given in two special columns)
+> Automatically group the chart by special data columns, e.g. group by "scenarios"
 
-> To enter SQL queries, use a template to simplify entering multiple similar output columns (e.g. for time steps)
+> To specify SQL queries of data tables that have many columns, you can use a template to select multiple columns that have similar names (e.g., if time-steps are in columns; for example, "T2025", "T2035", etc.)
 
-> Access the code and modify the Resultviewer because it is implemented in VBA inside Excel (just press `Alt+F11`).
+> You can easily adapt the Resultviewer because it is implemented in VBA inside Excel (just press the usual `Alt+F11` to open the VBA code editor of Excel).
 
 Note: The Resultviewer was originally designed for **multi-regional energy system models**, where 
 
 - the horizontal chart axis are time steps,
 - the charts are grouped by scenario and by region,
 
-Hence, some naming convention originate from there.
+Hence, some naming conventions originate from there.
+
 
 ## Short Description
 
-> The Resultviewer is an MS Excel file with macros that executes an arbitrary number of SQL-queries on tabular input data, and puts the extracted result tables together with optional charts on new Excel sheets.
+> The Resultviewer is an MS Excel file with VBA-macros that executes an arbitrary number of SQL-queries on tabular input data, and puts the extracted result tables together with optional charts on new Excel sheets.
 - Currently implemented input tables: A sheet in another Excel-file (.xslx), or a table of an MS Access database (.mdb)
-- The SQL-queries are specified in a separate text file 
+- The SQL-queries are specified in a separate text (.txt) file 
 
 
 ## Capabilities
@@ -44,13 +45,14 @@ To control the table and chart generation, the Resultviewer uses a control panel
 
 ### Run the example
 
-1. Download from this site the following three files: 
+1. Download from this site the three files: 
 	- `Resultviewer_NT.xls`,
 	- `sql_queries_Example.txt`,
 	- `WEO2024.xlsx`.
-2. Open `Resultviewer_NT.xls`, and enable macros (if not already done)
-3. In the Resultviewer, go to sheet `COLOR&ORDER_Example`. Look for the table a little bit on the right that has the paths to the input table `WEO2024.xlsx` and the SQL queries `sql_queries_Example.txt`. Adjust the paths to the locations of your files. 
-5. In the control panel, adjust the name of the color & ordering sheet to `COLOR&ORDER_Example`, and press `Load` to load values from the aforementioned table into the panel. Now, the panel should have the correct values of the example. Clearly, you could have entered the values also manually directly in the control panel.
+2. Open `Resultviewer_NT.xls`. Activate Macros in Excel: File -> Options -> Trust Center -> Macro Settings -> Enable: VBA macros & Trust access. If there is still a Macro problem, right-click the resultviewer-file in Windows Explorer -> Properties: "Security: This file came from another computer..." -> Trust. 
+2. Check that in the Excel-ribbon the tab "Add-ins" shows the items "Panel", "Update Colors", etc. Open the "Panel", then you can press "Exit" again. In the following, we will load into the panel the settings to run the example. Later on, you can also enter settings in the panel directly. The settings are pre-stored in the sheet `COLOR&ORDER_Example' as follows. 
+3. In the Resultviewer, go to sheet `COLOR&ORDER_Example`. Look out for the table a little bit on the right ("LoadUser"). This table has the paths to the input table `WEO2024.xlsx` and the SQL queries `sql_queries_Example.txt`. Adjust the paths to the locations of your versions of these files. 
+5. In the opened panel, adjust the name of the color & ordering sheet to `COLOR&ORDER_Example`, and press `Load` to load the values into the panel. Now, the panel should have the correct values of the example. Clearly, you could have entered the values also manually directly in the control panel.
 6. In the control panel, select a scenario in the drop-down box.
 7. In the control panel, press `View Scenario`.
 
@@ -64,12 +66,13 @@ To control the table and chart generation, the Resultviewer uses a control panel
 
 ## Colors
 
-Colors can be fully customized. In the Resultviewer, colors are specified by the colorindex in Excel, which is a number between 1-57 of Excel's palette. The following options exist:
+Colors can be fully customized. In the Resultviewer, colors are specified by the colorindex in Excel, which is a number between 1-57 of Excel's color palette. The following options exist:
 
 - **Standard color scheme:** Colors for each chart series can be specified in the `COLOR&ORDER` sheet in column `D`. To see the color of a colorindex that you want to choose, the table `Excel Palette` lists all colors. Press `Update Colors` in the ribbon to see all colors updated.
 - **Alternative color scheme:** An alternative scheme can be entered in the next column `E` on the `COLOR&ORDER` sheet. In the panel, you can tick whether this alternative colors should be used for chart import. As a special feature of this alternative scheme, in the next column `F`, you can enter a letter `s` such that the color is shaded with diagonal strips. 
 - **Custom Excel color palette:** If you need other colors than available in the standard Excel palette, you can specify your own palette in table `Palette` on the `COLOR&ORDER` sheet by re-defining a colorindex 1-57 to a RGB value (e.g. `255,0,0` for red). Press `use palette (Color&Order sheet)` in the panel to use the new definitions. Note: Not all colorindices have to be re-defined, and any order of indices is allowed.
 - **Coloring the interior of a selected Excel object:** If you need to alter the interior color of a single object (e.g. a chart series in a single chart), press `Set color` in the ribbon. This will open a dialogue, where you can select the colorindex. 
+
 
 ## Templates in the SQL-queries
 
