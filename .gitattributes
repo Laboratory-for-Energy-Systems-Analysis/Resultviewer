@@ -1,8 +1,16 @@
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
-* text=auto
-* .txt text eol=crlf
+
+*.txt text eol=crlf
+*.md text  eol=crlf
+core.autocrlf=true
+
+
+*.xls   binary
+*.xlsx  binary
+*.xlsm  binary
+
 
 ###############################################################################
 # Set default behavior for command prompt diff.
