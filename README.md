@@ -15,6 +15,8 @@ Note: The Resultviewer was originally designed for **multi-regional energy syste
 
 Hence, some naming conventions originate from there.
 
+![Screenshot1](Screenshot1.png "Panel and Ribbon of Resultviewer")
+
 
 ## Short Description
 
